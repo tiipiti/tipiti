@@ -9,3 +9,15 @@ select = ["E4", "E7", "E9", "F", "I"]
 [tool.bandit]
 exclude_dirs = ["migrations"]
 skips = ["B101"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+testpaths = ["tests"]
+markers = ["integration: requires Django's isolated test database"]
+
+[tool.mutmut]
+source_paths = ["shopping/services.py"]
+also_copy = ["accounts", "config", "core", "notifications", "shopping"]
+pytest_add_cli_args_test_selection = ["tests/unit"]
+use_setproctitle = false

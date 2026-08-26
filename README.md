@@ -36,3 +36,12 @@ O Django carrega `backend/.env` automaticamente. Use-o para o desenvolvimento lo
 Para pré-produção, configure `backend/.env.preprod`: defina uma URL pública, chaves fortes para `DJANGO_SECRET_KEY` e `MEDIA_ENCRYPTION_KEY`, hosts/origens permitidos, credenciais do PostgreSQL e `REDIS_URL`.
 
 Os dois arquivos são locais e ignorados pelo Git. Se não for usar o storage S3 local, acrescente `USE_VERSITYGW=False` ao `.env`.
+
+## Testes
+
+```bash
+cd backend
+uv run pytest                 # suíte completa
+uv run pytest tests/unit -q   # unitários sem banco, com MagicMock
+uv run mutmut run "*membership_for*"  # mutação focada
+```

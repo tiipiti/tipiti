@@ -19,6 +19,7 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 - Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
 - Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.
 - `shopping` possui a migration inicial `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.
+- Testes usam pytest: unitários ficam em `backend/tests/unit/` e usam `MagicMock` sem banco; integrações ficam em `backend/tests/integration/` e usam o banco temporário do Django.
 
 ## Ao alterar
 
