@@ -4,14 +4,19 @@ import logging
 
 from django.db import IntegrityError, transaction
 from rest_framework import mixins, viewsets
-from rest_framework.pagination import PageNumberPagination
 
 from core import exceptions
 
 
-class FlexiblePageNumberPagination(PageNumberPagination):
-    page_size_query_param = "page_size"
-    max_page_size = 1000
+class PaginatedResponseMixin:
+    def paginated_response(self, queryset, serializer_class=None):
+        page = self.paginate_queryset(queryset)
+        data = (
+            serializer_class(page, many=True, context=self.get_serializer_context()).data
+            if serializer_class
+            else list(page)
+        )
+        return self.get_paginated_response(data)
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +42,7 @@ class ActionParamsMixin:
         return serializer.validated_data
 
 
-class ViewSetBase(ActionParamsMixin, viewsets.ModelViewSet):
+class ViewSetBase(PaginatedResponseMixin, ActionParamsMixin, viewsets.ModelViewSet):
     serializer_action_classes: dict[str, type] = {}
 
     def get_serializer_class(self):
@@ -87,6 +92,7 @@ class ViewSetBase(ActionParamsMixin, viewsets.ModelViewSet):
 
 
 class WriteViewSetBase(
+    PaginatedResponseMixin,
     ActionParamsMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,

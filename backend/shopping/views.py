@@ -10,8 +10,9 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from core.viewsets import ViewSetBase, WriteViewSetBase
+from core.viewsets import PaginatedResponseMixin, ViewSetBase, WriteViewSetBase
 
+from .filters import PriceObservationFilter, PromotionFilter, ShoppingPurchaseFilter
 from .models import (
     AdministrativeAudit,
     FavoriteMarket,
@@ -106,7 +107,7 @@ class ShoppingListViewSet(ViewSetBase):
         membership_for(shopping_list, request.user)
         if request.method == "GET":
             memberships = shopping_list.memberships.select_related("user").order_by("joined_at")
-            return Response(ListMemberSerializer(memberships, many=True).data)
+            return self.paginated_response(memberships, ListMemberSerializer)
         serializer = ListInviteCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         invite = create_invite(shopping_list, request.user, **serializer.validated_data)
@@ -293,7 +294,7 @@ class PurchaseViewSet(ViewSetBase):
         )
         membership_for(purchase.store_item.list_item.shopping_list, request.user)
         changes = purchase.changes.select_related("changed_by")
-        return Response(PurchaseChangeSerializer(changes, many=True).data)
+        return self.paginated_response(changes, PurchaseChangeSerializer)
 
 
 class MarketNetworkViewSet(ViewSetBase):
@@ -329,20 +330,19 @@ class ProductViewSet(ViewSetBase):
     def price_history(self, request, public_id=None):
         product = self.get_object()
         prices = PriceObservation.objects.filter(product=product, is_valid=True).select_related("branch")
-        return Response(PriceObservationSerializer(prices, many=True).data)
+        return self.paginated_response(prices, PriceObservationSerializer)
 
 
-class PriceObservationViewSet(viewsets.GenericViewSet):
+class PriceObservationViewSet(PaginatedResponseMixin, viewsets.GenericViewSet):
     queryset = PriceObservation.objects.select_related("product", "branch")
     serializer_class = PriceObservationSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "public_id"
+    filterset_class = PriceObservationFilter
 
     def list(self, request):
-        queryset = self.queryset.filter(is_valid=True)
-        if product_id := request.query_params.get("product_id"):
-            queryset = queryset.filter(product__public_id=product_id)
-        return Response(self.get_serializer(queryset, many=True).data)
+        queryset = self.filter_queryset(self.queryset.filter(is_valid=True))
+        return self.paginated_response(queryset, self.get_serializer_class())
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -351,7 +351,7 @@ class PriceObservationViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ComparisonViewSet(viewsets.ViewSet):
+class ComparisonViewSet(PaginatedResponseMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
@@ -367,7 +367,8 @@ class ComparisonViewSet(viewsets.ViewSet):
         ).select_related("product", "branch__network").prefetch_related(
             Prefetch("product__promotions", queryset=promotions)
         ).order_by("branch_id", "-observed_on", "-created_at").distinct("branch_id")
-        return Response([
+        page = self.paginate_queryset(prices)
+        return self.get_paginated_response([
             {
                 "market_id": price.branch.public_id, "market": str(price.branch), "amount": str(price.amount),
                 "observed_on": price.observed_on, "stale": price.observed_on < cutoff - timedelta(days=7),
@@ -377,18 +378,22 @@ class ComparisonViewSet(viewsets.ViewSet):
                     for promotion in price.product.promotions.all()
                 ),
             }
-            for price in prices
+            for price in page
         ])
 
 
-class PromotionViewSet(viewsets.GenericViewSet):
+class PromotionViewSet(PaginatedResponseMixin, viewsets.GenericViewSet):
     queryset = Promotion.objects.select_related("network", "branch", "product")
     serializer_class = PromotionSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "public_id"
+    filterset_class = PromotionFilter
 
     def list(self, request):
-        return Response(self.get_serializer(self.queryset.filter(is_valid=True, ends_on__gte=timezone.localdate()), many=True).data)
+        queryset = self.filter_queryset(
+            self.queryset.filter(is_valid=True, ends_on__gte=timezone.localdate())
+        )
+        return self.paginated_response(queryset, self.get_serializer_class())
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -397,13 +402,13 @@ class PromotionViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class FeedViewSet(viewsets.ViewSet):
+class FeedViewSet(PaginatedResponseMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
         item_names = ListItem.objects.filter(shopping_list__memberships__user=request.user).values("name")
         promotions = Promotion.objects.filter(is_valid=True, ends_on__gte=timezone.localdate(), product__name__in=item_names)
-        return Response({"promotions": PromotionSerializer(promotions, many=True).data})
+        return self.paginated_response(promotions, PromotionSerializer)
 
 
 class ShoppingPurchaseViewSet(ViewSetBase):
@@ -412,6 +417,7 @@ class ShoppingPurchaseViewSet(ViewSetBase):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "public_id"
     http_method_names = ["get", "patch", "head", "options"]
+    filterset_class = ShoppingPurchaseFilter
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
@@ -426,13 +432,13 @@ class ShoppingPurchaseViewSet(ViewSetBase):
 
     @action(detail=False, methods=["get"], url_path="summary")
     def summary(self, request):
-        purchases = self.get_queryset()
+        purchases = self.filter_queryset(self.get_queryset())
         if start := request.query_params.get("from"):
             purchases = purchases.filter(purchased_on__gte=start)
         if end := request.query_params.get("to"):
             purchases = purchases.filter(purchased_on__lte=end)
         totals = purchases.values("branch__public_id", "branch__name").annotate(total=Sum("total_amount")).order_by("branch__name")
-        return Response(list(totals))
+        return self.paginated_response(totals)
 
 
 class SyncViewSet(viewsets.ViewSet):
@@ -491,12 +497,14 @@ class ReportViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class AdministrationViewSet(viewsets.ViewSet):
+class AdministrationViewSet(PaginatedResponseMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     @action(detail=False, methods=["get"], url_path="reports")
     def reports(self, request):
-        return Response(ReportSerializer(Report.objects.select_related("reporter", "resolved_by"), many=True).data)
+        return self.paginated_response(
+            Report.objects.select_related("reporter", "resolved_by"), ReportSerializer
+        )
 
     @action(detail=False, methods=["post"], url_path=r"reports/(?P<report_id>[^/.]+)/resolve")
     def resolve_report(self, request, report_id=None):

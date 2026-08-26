@@ -92,7 +92,36 @@ class QueryCountIntegrationTests(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_comparison_prefetches_applicable_promotions(self):
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(f"/api/v1/comparisons/?product_id={self.product.public_id}")
 
         self.assertEqual(response.status_code, 200)
+
+    def test_price_list_filters_and_uses_the_configured_paginator(self):
+        today = timezone.localdate()
+        for amount in range(3):
+            PriceObservation.objects.create(
+                product=self.product,
+                branch=self.branches[0],
+                created_by=self.user,
+                amount=Decimal(amount + 20),
+                observed_on=today - timedelta(days=amount),
+            )
+        other_product = Product.objects.create(name="Feijão")
+        PriceObservation.objects.create(
+            product=other_product,
+            branch=self.branches[0],
+            created_by=self.user,
+            amount=Decimal("8.00"),
+            observed_on=today,
+        )
+
+        response = self.client.get(
+            f"/api/v1/prices/?product_id={self.product.public_id}"
+            f"&observed_on_after={today - timedelta(days=2)}&page_size=1"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 5)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertTrue(response.data["next"])
