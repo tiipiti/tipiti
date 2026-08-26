@@ -1,0 +1,33 @@
+# Tipiti
+
+Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura ou os padrões do repositório mudarem.
+
+## Estrutura atual
+
+- `backend/` contém o projeto Django; `config/` concentra settings, URLs e o admin customizado.
+- `backend/accounts/` contém perfil, sessão e autenticação por senha, Google e Facebook.
+- `backend/shopping/` contém listas, convites, mercados, catálogo, preços, promoções, compras, sync, links compartilhados e moderação.
+- `backend/notifications/` contém as notificações internas.
+- `backend/core/` contém os blocos reutilizados, incluindo `BaseModel`, `ViewSetBase`, mídia e exceções.
+- `docs/superpowers/specs/` contém specs separadas por `backend/` e `android/`.
+
+## Padrões presentes no código
+
+- Modelos públicos do domínio herdam de `core.models.BaseModel` e expõem `public_id` UUID.
+- As APIs usam Django REST Framework; CRUDes existentes usam `core.viewsets.ViewSetBase` e rotas em `urls.py` ou `rfc_urls.py`.
+- A API legada está sob `/api/`; os recursos RFC atuais estão sob `/api/v1/`.
+- Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
+- Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.
+- `shopping` possui a migration inicial `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.
+
+## Ao alterar
+
+- Leia o fluxo e os modelos afetados antes de editar; preserve mudanças não relacionadas.
+- Atualize este arquivo se a alteração mudar algum item acima.
+- Verifique Python com `python3 -m compileall -q backend` e mudanças rastreadas com `git diff --check` quando possível.
+
+## Skills obrigatórias para o backend
+
+- Use `$django-expert` ao criar ou alterar modelos, migrations, serializers, autenticação, consultas ORM ou APIs Django REST Framework.
+- Use `$django-patterns` para decisões de arquitetura Django, organização de apps, APIs REST, cache, signals e desempenho.
+- Use `@Ponytail` em qualquer mudança de código: siga a solução menor que preserve validação, segurança e regras de negócio; não adicione dependências ou abstrações sem necessidade.

@@ -150,6 +150,7 @@ activemq-data/
 # Environments
 .env
 .envrc
+.env.*
 .venv
 env/
 venv/
@@ -213,6 +214,9 @@ tempCodeRunnerFile.py
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Documentação de trabalho local
+/docs/superpowers/specs/
 
 # Streamlit
 .streamlit/secrets.toml
