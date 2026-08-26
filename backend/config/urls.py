@@ -13,7 +13,7 @@ def health(request):
 
 
 urlpatterns = [
-    path("", admin_site.urls),
+    path("", admin_site.admin_view(admin_site.index), name="admin-index"),
     path("api/health/", health, name="health"),
     path("admin/", admin_site.urls),
     path("api/auth/", include("accounts.urls")),
