@@ -61,6 +61,8 @@ class Store(BaseModel):
 
     class Meta:
         ordering = ["name"]
+        verbose_name = "Mercado salvo"
+        verbose_name_plural = "Mercados salvos"
 
     def __str__(self) -> str:
         return self.name
@@ -102,9 +104,20 @@ class Purchase(BaseModel):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=13, decimal_places=5)
     purchased_at = models.DateTimeField(default=timezone.now)
+    voided_at = models.DateTimeField(null=True, blank=True)
+    voided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="voided_purchases",
+    )
+    void_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
         ordering = ["-purchased_at"]
+        verbose_name = "Compra de item"
+        verbose_name_plural = "Compras de itens"
         constraints = [
             models.CheckConstraint(
                 condition=Q(quantity__gt=0), name="shopping_purchase_quantity_positive"
@@ -123,6 +136,27 @@ class Purchase(BaseModel):
     def save(self, *args, **kwargs):
         self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
+
+
+class PurchaseChange(BaseModel):
+    class Kind(models.TextChoices):
+        CREATED = "created", "Created"
+        CORRECTED = "corrected", "Corrected"
+        VOIDED = "voided", "Voided"
+
+    purchase = models.ForeignKey(Purchase, on_delete=models.PROTECT, related_name="changes")
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="purchase_changes",
+    )
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    before = models.JSONField(default=dict, blank=True)
+    after = models.JSONField(default=dict, blank=True)
+    reason = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
 
 class MarketNetwork(BaseModel):
@@ -148,6 +182,8 @@ class MarketBranch(BaseModel):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        verbose_name = "Unidade cadastrada"
+        verbose_name_plural = "Unidades cadastradas"
         constraints = [
             models.UniqueConstraint(
                 fields=["network", "normalized_address"], name="market_branch_address_unique"
@@ -376,6 +412,27 @@ class ListMembership(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.shopping_list} — {self.user}"
+
+
+class ListOwnershipChange(BaseModel):
+    shopping_list = models.ForeignKey(
+        ShoppingList,
+        on_delete=models.CASCADE,
+        related_name="ownership_changes",
+    )
+    previous_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="transferred_list_ownerships",
+    )
+    new_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="received_list_ownerships",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
 
 
 class ListInvite(BaseModel):

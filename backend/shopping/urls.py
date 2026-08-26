@@ -28,6 +28,8 @@ purchase_collection = PurchaseViewSet.as_view({"get": "list", "post": "create"})
 purchase_detail = PurchaseViewSet.as_view(
     {"patch": "partial_update", "delete": "destroy"}
 )
+purchase_void = PurchaseViewSet.as_view({"post": "void"})
+purchase_changes = PurchaseViewSet.as_view({"get": "changes"})
 invite_accept = ListInviteAcceptViewSet.as_view({"post": "accept"})
 
 urlpatterns = [
@@ -37,6 +39,8 @@ urlpatterns = [
     path("store-items/<uuid:public_id>/", store_item_detail),
     path("store-items/<uuid:store_item_public_id>/purchases/", purchase_collection),
     path("purchases/<uuid:public_id>/", purchase_detail),
+    path("purchases/<uuid:public_id>/void/", purchase_void),
+    path("purchases/<uuid:public_id>/changes/", purchase_changes),
     path("list-invites/<str:token>/accept/", invite_accept),
     path("", include(router.urls)),
 ]

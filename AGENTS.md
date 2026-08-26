@@ -18,6 +18,10 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 - A API legada está sob `/api/`; os recursos RFC atuais estão sob `/api/v1/`.
 - Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
 - Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.
+- Ao criar uma `ShoppingList` no admin, o administrador criador recebe automaticamente o papel `OWNER`.
+- Compras de item registradas, corrigidas ou estornadas preservam eventos append-only em `PurchaseChange`; transferências de posse ficam em `ListOwnershipChange`.
+- O dashboard administrativo prioriza uma fila de atenção antes das métricas de contexto.
+- O profiler opcional `django-sonar` só é ativado fora dos testes com `DJANGO_DEBUG=True` e `DJANGO_SONAR=True`; seu painel fica em `/sonar/`.
 - `shopping` possui a migration inicial `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.
 - Testes usam pytest: unitários ficam em `backend/tests/unit/` e usam `MagicMock` sem banco; integrações ficam em `backend/tests/integration/` e usam o banco temporário do Django.
 

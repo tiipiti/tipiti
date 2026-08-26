@@ -5,14 +5,20 @@ from .models import (
     ListInvite,
     ListItem,
     ListMembership,
+    MarketBranch,
+    MarketNetwork,
+    PriceObservation,
+    Product,
+    Promotion,
     Purchase,
+    PurchaseChange,
+    Report,
+    ShareLink,
     ShoppingList,
+    ShoppingPurchase,
+    ShoppingPurchaseItem,
     Store,
     StoreItem,
-)
-from .models import (
-    FavoriteMarket, MarketBranch, MarketNetwork, Product, PriceObservation,
-    Promotion, Report, ShareLink, ShoppingPurchase, ShoppingPurchaseItem, SyncOperation,
 )
 
 
@@ -229,6 +235,23 @@ class FinalizePurchaseSerializer(serializers.Serializer):
     purchased_on = serializers.DateField(default=timezone.localdate)
     client_operation_id = serializers.UUIDField()
     items = PurchaseItemInputSerializer(many=True, min_length=1)
+
+
+class PurchaseVoidSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True)
+
+
+class TransferOwnershipSerializer(serializers.Serializer):
+    member_id = serializers.UUIDField()
+
+
+class PurchaseChangeSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
+    changed_by = serializers.CharField(source="changed_by.username", read_only=True)
+
+    class Meta:
+        model = PurchaseChange
+        fields = ["id", "kind", "before", "after", "reason", "changed_by", "created_at"]
 
 
 class ShoppingPurchaseItemSerializer(serializers.ModelSerializer):

@@ -2,53 +2,72 @@ import hashlib
 import json
 from datetime import timedelta
 
-from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Prefetch, Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from core.viewsets import ViewSetBase, WriteViewSetBase
 
 from .models import (
+    AdministrativeAudit,
+    FavoriteMarket,
     ListInvite,
     ListItem,
     ListMembership,
+    MarketBranch,
+    MarketNetwork,
+    PriceObservation,
+    Product,
+    Promotion,
     Purchase,
+    PurchaseChange,
+    Report,
+    ShareLink,
     ShoppingList,
+    ShoppingPurchase,
     Store,
     StoreItem,
-)
-from .models import (
-    AdministrativeAudit, FavoriteMarket, MarketBranch, MarketNetwork, PriceObservation, Product, Promotion,
-    Report, ShareLink, ShoppingPurchase, SyncOperation,
+    SyncOperation,
 )
 from .serializers import (
+    FinalizePurchaseSerializer,
     ListInviteCreateSerializer,
     ListInviteSerializer,
     ListItemSerializer,
     ListMemberSerializer,
+    MarketBranchSerializer,
+    MarketNetworkSerializer,
+    PriceObservationSerializer,
+    ProductSerializer,
+    PromotionSerializer,
+    PurchaseChangeSerializer,
     PurchaseSerializer,
+    PurchaseVoidSerializer,
+    ReportSerializer,
+    ShareLinkSerializer,
     ShoppingListSerializer,
+    ShoppingPurchaseSerializer,
     StoreItemSerializer,
     StoreSerializer,
-)
-from .serializers import (
-    FinalizePurchaseSerializer, MarketBranchSerializer, MarketNetworkSerializer,
-    PriceObservationSerializer, ProductSerializer, PromotionSerializer, ReportSerializer,
-    ShareLinkSerializer, ShoppingPurchaseSerializer, SyncRequestSerializer,
+    SyncRequestSerializer,
+    TransferOwnershipSerializer,
 )
 from .services import (
     accept_invite,
+    apply_sync_operation,
+    correct_purchase,
     create_invite,
     ensure_active,
-    apply_sync_operation,
     finalize_purchase,
     membership_for,
     owner_for,
+    purchase_snapshot,
+    transfer_ownership,
+    void_purchase,
 )
 
 
@@ -112,6 +131,17 @@ class ShoppingListViewSet(ViewSetBase):
         membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=["post"], url_path="transfer-ownership")
+    def transfer_ownership(self, request, public_id=None):
+        serializer = TransferOwnershipSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_owner = transfer_ownership(
+            request.user,
+            self.get_object(),
+            serializer.validated_data["member_id"],
+        )
+        return Response(ListMemberSerializer(new_owner).data)
+
     @action(detail=True, methods=["post"], url_path="finalize")
     def finalize(self, request, public_id=None):
         shopping_list = self.get_object()
@@ -140,7 +170,7 @@ class ListItemViewSet(ViewSetBase):
         )
         membership_for(shopping_list, self.request.user)
         ensure_active(shopping_list)
-        item = serializer.save(shopping_list=shopping_list)
+        serializer.save(shopping_list=shopping_list)
 
     def perform_update(self, serializer):
         item = self.get_object()
@@ -224,26 +254,46 @@ class PurchaseViewSet(ViewSetBase):
         membership_for(store_item.list_item.shopping_list, self.request.user)
         ensure_active(store_item.list_item.shopping_list)
         purchase = serializer.save(store_item=store_item, purchased_by=self.request.user)
+        PurchaseChange.objects.create(
+            purchase=purchase,
+            changed_by=self.request.user,
+            kind=PurchaseChange.Kind.CREATED,
+            after=purchase_snapshot(purchase),
+        )
         store_item.current_unit_price = purchase.unit_price
         store_item.price_updated_at = timezone.now()
         store_item.save(update_fields=["current_unit_price", "price_updated_at", "updated_at"])
 
     def perform_update(self, serializer):
-        purchase = self.get_object()
-        if purchase.purchased_by_id != self.request.user.id:
-            raise PermissionDenied("Somente quem registrou a compra pode alterá-la.")
-        ensure_active(purchase.store_item.list_item.shopping_list)
-        purchase = serializer.save()
-        store_item = purchase.store_item
-        store_item.current_unit_price = purchase.unit_price
-        store_item.price_updated_at = timezone.now()
-        store_item.save(update_fields=["current_unit_price", "price_updated_at", "updated_at"])
+        if not serializer.validated_data:
+            raise ValidationError("Informe ao menos um campo para corrigir a compra.")
+        serializer.instance = correct_purchase(
+            self.request.user,
+            self.get_object(),
+            serializer.validated_data,
+        )
 
     def perform_destroy(self, instance):
-        if instance.purchased_by_id != self.request.user.id:
-            raise PermissionDenied("Somente quem registrou a compra pode removê-la.")
-        ensure_active(instance.store_item.list_item.shopping_list)
-        instance.delete()
+        void_purchase(self.request.user, instance)
+
+    def void(self, request, public_id=None):
+        serializer = PurchaseVoidSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        void_purchase(
+            request.user,
+            self.get_object(),
+            reason=serializer.validated_data.get("reason", ""),
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def changes(self, request, public_id=None):
+        purchase = get_object_or_404(
+            Purchase.objects.select_related("store_item__list_item__shopping_list"),
+            public_id=public_id,
+        )
+        membership_for(purchase.store_item.list_item.shopping_list, request.user)
+        changes = purchase.changes.select_related("changed_by")
+        return Response(PurchaseChangeSerializer(changes, many=True).data)
 
 
 class MarketNetworkViewSet(ViewSetBase):
@@ -309,17 +359,23 @@ class ComparisonViewSet(viewsets.ViewSet):
         if not product_id:
             raise ValidationError({"product_id": "Este parâmetro é obrigatório."})
         cutoff = timezone.localdate() - timedelta(days=1)
+        promotions = Promotion.objects.filter(
+            is_valid=True, starts_on__lte=timezone.localdate(), ends_on__gte=timezone.localdate()
+        ).select_related("network", "branch")
         prices = PriceObservation.objects.filter(
             product__public_id=product_id, is_valid=True, observed_on__lte=cutoff
-        ).select_related("branch__network").order_by("branch_id", "-observed_on", "-created_at").distinct("branch_id")
-        today = timezone.localdate()
+        ).select_related("product", "branch__network").prefetch_related(
+            Prefetch("product__promotions", queryset=promotions)
+        ).order_by("branch_id", "-observed_on", "-created_at").distinct("branch_id")
         return Response([
             {
                 "market_id": price.branch.public_id, "market": str(price.branch), "amount": str(price.amount),
                 "observed_on": price.observed_on, "stale": price.observed_on < cutoff - timedelta(days=7),
-                "promotion": Promotion.objects.filter(
-                    product=price.product, is_valid=True, starts_on__lte=today, ends_on__gte=today,
-                ).filter(Q(branch=price.branch) | Q(branch__isnull=True, network=price.branch.network)).exists(),
+                "promotion": any(
+                    promotion.branch_id == price.branch_id
+                    or (promotion.branch_id is None and promotion.network_id == price.branch.network_id)
+                    for promotion in price.product.promotions.all()
+                ),
             }
             for price in prices
         ])
@@ -351,7 +407,7 @@ class FeedViewSet(viewsets.ViewSet):
 
 
 class ShoppingPurchaseViewSet(ViewSetBase):
-    queryset = ShoppingPurchase.objects.select_related("branch", "shopping_list").prefetch_related("items")
+    queryset = ShoppingPurchase.objects.select_related("branch", "shopping_list").prefetch_related("items__list_item")
     serializer_class = ShoppingPurchaseSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "public_id"

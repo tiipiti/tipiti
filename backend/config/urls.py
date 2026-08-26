@@ -23,6 +23,9 @@ urlpatterns = [
     path("api/media/<path:path>", serve_user_media, name="serve-user-media"),
 ]
 
+if settings.ENABLE_DJANGO_SONAR:
+    urlpatterns.append(path("sonar/", include("django_sonar.urls")))
+
 # Documentação da API disponível apenas em DEBUG ou para usuários autenticados.
 # Em produção, exige autenticação para evitar expor o contrato da API.
 if settings.DEBUG:

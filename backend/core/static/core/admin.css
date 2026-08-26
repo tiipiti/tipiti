@@ -13,6 +13,7 @@
 .tipiti-dashboard__summary strong { color: oklch(25% .04 148); font-size: 1.5rem; letter-spacing: -.02em; }
 .tipiti-dashboard a { color: oklch(38% .09 148); font-size: .8125rem; font-weight: 700; text-decoration: none; }
 .tipiti-dashboard a:hover { color: oklch(29% .07 148); text-decoration: underline; }
+.tipiti-dashboard a:focus-visible { outline: 3px solid oklch(57% .11 149); outline-offset: 3px; }
 .tipiti-dashboard__attention { background: oklch(97% .022 52) !important; border-color: oklch(88% .055 52) !important; }
 .tipiti-dashboard__attention strong, .tipiti-dashboard__attention a { color: oklch(45% .12 43); }
 .tipiti-dashboard__grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
@@ -31,6 +32,9 @@
 .tipiti-dashboard__activity strong { font-size: .875rem; }
 .tipiti-dashboard__activity span { color: oklch(49% .035 148); font-size: .75rem; }
 .tipiti-dashboard__activity b { font-size: .8125rem; }
+.tipiti-dashboard__attention-list li { padding: 0; }
+.tipiti-dashboard__attention-list a { align-items: center; display: grid; gap: .75rem; grid-template-columns: 1fr auto; padding: .8rem 0; }
+.tipiti-dashboard__attention-list a:hover { text-decoration: none; }
 .tipiti-dashboard__empty { align-items: center; color: oklch(46% .04 148); display: flex; gap: .75rem; min-height: 9rem; }
 .tipiti-dashboard__empty img { height: 4.5rem; object-fit: contain; width: 5rem; }
 .tipiti-login { color: oklch(26% .036 150); }
@@ -41,4 +45,5 @@
 .tipiti-login__heading span { color: oklch(39% .045 148); display: block; line-height: 1.5; margin-top: .65rem; }
 @media (max-width: 1279px) { .tipiti-login__art { height: 5rem; width: 6rem; } }
 @media (max-width: 640px) { .tipiti-dashboard__hero-art { opacity: .32; width: 100%; } }
+@media (max-width: 640px) { .tipiti-dashboard__attention-list a { align-items: start; grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .tipiti-dashboard__links a { transition: none; } }

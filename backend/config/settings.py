@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -7,8 +8,8 @@ try:
     import resend as _resend
 except ModuleNotFoundError:  # pragma: no cover - optional integration
     _resend = None
-from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
 _log = logging.getLogger(__name__)
@@ -60,6 +61,12 @@ TRASH_RETENTION_DAYS = int(os.getenv("TRASH_RETENTION_DAYS", "30"))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
+ENABLE_DJANGO_SONAR = (
+    DEBUG
+    and os.getenv("DJANGO_SONAR", "False") == "True"
+    and "test" not in sys.argv
+    and "pytest" not in sys.modules
+)
 USE_VERSITYGW = os.getenv("USE_VERSITYGW", "True") == "True"
 USE_R2 = (
     os.getenv("AWS_S3_ENDPOINT_URL", "").startswith("https://") and not USE_VERSITYGW
@@ -159,6 +166,9 @@ INSTALLED_APPS = [
     "notifications",
     "shopping",
 ]
+
+if ENABLE_DJANGO_SONAR:
+    INSTALLED_APPS.append("django_sonar")
 
 UNFOLD = {
     "SITE_TITLE": _("Tipiti Admin"),
@@ -274,6 +284,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+if ENABLE_DJANGO_SONAR:
+    MIDDLEWARE.append("django_sonar.middlewares.requests.RequestsMiddleware")
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
@@ -344,6 +357,10 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+DJANGO_SONAR = {
+    "excludes": [STATIC_URL, MEDIA_URL, "/admin/", "/api/docs/", "/api/schema/", "/sonar/"],
+}
 
 # VersityGW Object Storage Configuration
 if USE_VERSITYGW:

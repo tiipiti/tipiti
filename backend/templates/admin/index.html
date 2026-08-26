@@ -30,7 +30,23 @@
     </section>
 
     <section class="tipiti-dashboard__panel">
-      <div class="tipiti-dashboard__panel-heading"><div><p>Hoje</p><h2>Compras recentes</h2></div><a href="{% url 'tipiti_admin:shopping_shoppingpurchase_changelist' %}">Ver todas</a></div>
+      <div class="tipiti-dashboard__panel-heading"><div><p>Hoje, {{ today_label }}</p><h2>Requer atenção</h2></div></div>
+      {% if attention_items %}
+        <ul class="tipiti-dashboard__activity tipiti-dashboard__attention-list">
+          {% for item in attention_items %}
+            <li><a href="{{ item.url }}"><div><strong>{{ item.title }}</strong><span>{{ item.detail }}</span></div><b>{{ item.when }}</b></a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="tipiti-dashboard__empty">
+          <img src="{% static 'core/images/undraw-shopping.svg' %}" alt="" aria-hidden="true">
+          <p>Nada precisa de atenção agora.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="tipiti-dashboard__panel">
+      <div class="tipiti-dashboard__panel-heading"><div><p>Hoje, {{ today_label }}</p><h2>Compras recentes</h2></div><a href="{% url 'tipiti_admin:shopping_shoppingpurchase_changelist' %}">Ver todas</a></div>
       {% if recent_purchases %}
         <ul class="tipiti-dashboard__activity">
           {% for purchase in recent_purchases %}

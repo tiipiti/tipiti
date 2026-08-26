@@ -1,13 +1,32 @@
 from django.contrib import admin
 from django.utils import timezone
-
-from config.admin_site import site as admin_site
 from unfold.admin import ModelAdmin, TabularInline
 
+from config.admin_site import site as admin_site
+
 from .models import (
-    AdministrativeAudit, FavoriteMarket, ListInvite, ListItem, ListMembership, MarketBranch, MarketNetwork,
-    PriceObservation, Product, ProductAlias, Promotion, Purchase, Report, ShareLink,
-    ShoppingList, ShoppingPurchase, ShoppingPurchaseItem, Store, StoreItem, SyncOperation,
+    AdministrativeAudit,
+    FavoriteMarket,
+    ListInvite,
+    ListItem,
+    ListMembership,
+    ListOwnershipChange,
+    MarketBranch,
+    MarketNetwork,
+    PriceObservation,
+    Product,
+    ProductAlias,
+    Promotion,
+    Purchase,
+    PurchaseChange,
+    Report,
+    ShareLink,
+    ShoppingList,
+    ShoppingPurchase,
+    ShoppingPurchaseItem,
+    Store,
+    StoreItem,
+    SyncOperation,
 )
 
 
@@ -33,8 +52,14 @@ class ShoppingListAdmin(ModelAdmin):
     inlines = (ListMembershipInline, ListItemInline)
     actions = ("archive", "restore")
 
-    def has_add_permission(self, request):
-        return False
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:
+            ListMembership.objects.create(
+                shopping_list=obj,
+                user=request.user,
+                role=ListMembership.Role.OWNER,
+            )
 
     @admin.action(description="Arquivar listas selecionadas")
     def archive(self, request, queryset):
@@ -52,6 +77,7 @@ class ListMembershipAdmin(ModelAdmin):
     search_fields = ("shopping_list__name", "user__username", "user__email")
     autocomplete_fields = ("shopping_list", "user")
     readonly_fields = ("public_id", "joined_at", "created_at", "updated_at")
+    list_select_related = ("shopping_list", "user")
 
     def has_delete_permission(self, request, obj=None):
         return obj is None or obj.role != ListMembership.Role.OWNER
@@ -64,6 +90,7 @@ class ListInviteAdmin(ModelAdmin):
     search_fields = ("shopping_list__name", "invited_email", "token")
     autocomplete_fields = ("shopping_list", "created_by")
     readonly_fields = ("public_id", "token", "created_at", "updated_at")
+    list_select_related = ("shopping_list", "created_by")
 
     def has_delete_permission(self, request, obj=None):
         return obj is None or obj.accepted_at is None
@@ -76,6 +103,7 @@ class ListItemAdmin(ModelAdmin):
     search_fields = ("name", "shopping_list__name")
     autocomplete_fields = ("shopping_list",)
     readonly_fields = ("public_id", "checked_at", "created_at", "updated_at")
+    list_select_related = ("shopping_list",)
 
 
 @admin.register(Store, site=admin_site)
@@ -84,6 +112,7 @@ class StoreAdmin(ModelAdmin):
     search_fields = ("name", "address", "created_by__username", "created_by__email")
     autocomplete_fields = ("created_by",)
     readonly_fields = ("public_id", "created_at", "updated_at")
+    list_select_related = ("created_by",)
 
 
 @admin.register(MarketNetwork, site=admin_site)
@@ -111,6 +140,7 @@ class MarketBranchAdmin(ModelAdmin):
     autocomplete_fields = ("network",)
     readonly_fields = ("public_id", "normalized_address", "created_at", "updated_at")
     actions = ("activate", "deactivate")
+    list_select_related = ("network",)
 
     @admin.action(description="Ativar unidades selecionadas")
     def activate(self, request, queryset):
@@ -128,6 +158,7 @@ class FavoriteMarketAdmin(ModelAdmin):
     search_fields = ("user__username", "user__email", "branch__name", "branch__network__name")
     autocomplete_fields = ("user", "branch")
     readonly_fields = ("public_id", "created_at", "updated_at")
+    list_select_related = ("user", "branch__network")
 
 
 @admin.register(Product, site=admin_site)
@@ -153,6 +184,7 @@ class ProductAliasAdmin(ModelAdmin):
     search_fields = ("alias", "product__name")
     autocomplete_fields = ("product",)
     readonly_fields = ("public_id", "normalized_alias", "created_at", "updated_at")
+    list_select_related = ("product",)
 
 
 @admin.register(PriceObservation, site=admin_site)
@@ -163,6 +195,7 @@ class PriceObservationAdmin(ModelAdmin):
     autocomplete_fields = ("product", "branch", "created_by")
     readonly_fields = ("public_id", "created_at", "updated_at")
     actions = ("validate_prices", "invalidate_prices")
+    list_select_related = ("product", "branch")
 
     @admin.action(description="Validar preços selecionados")
     def validate_prices(self, request, queryset):
@@ -181,6 +214,7 @@ class PromotionAdmin(ModelAdmin):
     autocomplete_fields = ("product", "network", "branch", "created_by")
     readonly_fields = ("public_id", "created_at", "updated_at")
     actions = ("validate_promotions", "invalidate_promotions")
+    list_select_related = ("product", "network", "branch")
 
     @admin.action(description="Validar promoções selecionadas")
     def validate_promotions(self, request, queryset):
@@ -198,6 +232,7 @@ class ShoppingPurchaseAdmin(ModelAdmin):
     search_fields = ("user__username", "user__email", "branch__name", "shopping_list__name")
     autocomplete_fields = ("user", "branch", "shopping_list")
     readonly_fields = ("public_id", "total_amount", "client_operation_id", "created_at", "updated_at")
+    list_select_related = ("user", "branch", "shopping_list")
 
 
 @admin.register(ShoppingPurchaseItem, site=admin_site)
@@ -207,6 +242,7 @@ class ShoppingPurchaseItemAdmin(ModelAdmin):
     list_filter = ("product",)
     autocomplete_fields = ("purchase", "list_item", "product")
     readonly_fields = ("public_id", "total_price", "created_at", "updated_at")
+    list_select_related = ("purchase",)
 
 
 @admin.register(SyncOperation, site=admin_site)
@@ -215,6 +251,7 @@ class SyncOperationAdmin(ModelAdmin):
     list_filter = ("status", "entity_type", "operation_type")
     search_fields = ("user__username", "user__email", "device_id", "client_operation_id", "payload_hash")
     readonly_fields = ("public_id", "user", "device_id", "client_operation_id", "payload_hash", "received_at", "created_at", "updated_at")
+    list_select_related = ("user",)
 
     def has_add_permission(self, request):
         return False
@@ -228,6 +265,7 @@ class ShareLinkAdmin(ModelAdmin):
     autocomplete_fields = ("user",)
     readonly_fields = ("public_id", "token", "created_at", "updated_at")
     actions = ("revoke_links",)
+    list_select_related = ("user",)
 
     @admin.action(description="Revogar links selecionados")
     def revoke_links(self, request, queryset):
@@ -242,6 +280,7 @@ class ReportAdmin(ModelAdmin):
     autocomplete_fields = ("reporter", "resolved_by")
     readonly_fields = ("public_id", "created_at", "updated_at")
     actions = ("resolve_reports",)
+    list_select_related = ("reporter", "resolved_by")
 
     @admin.action(description="Resolver denúncias selecionadas")
     def resolve_reports(self, request, queryset):
@@ -258,6 +297,7 @@ class AdministrativeAuditAdmin(ModelAdmin):
     list_filter = ("action", "target_type")
     search_fields = ("administrator__username", "administrator__email", "target_id")
     readonly_fields = ("public_id", "administrator", "action", "target_type", "target_id", "details", "created_at", "updated_at")
+    list_select_related = ("administrator",)
 
     def has_add_permission(self, request):
         return False
@@ -273,6 +313,7 @@ class StoreItemAdmin(ModelAdmin):
     list_filter = ("store",)
     autocomplete_fields = ("list_item", "store")
     readonly_fields = ("public_id", "price_updated_at", "created_at", "updated_at")
+    list_select_related = ("list_item", "store")
 
 
 @admin.register(Purchase, site=admin_site)
@@ -282,3 +323,39 @@ class PurchaseAdmin(ModelAdmin):
     search_fields = ("store_item__list_item__name", "purchased_by__username", "purchased_by__email")
     autocomplete_fields = ("store_item", "purchased_by")
     readonly_fields = ("public_id", "total_price", "created_at", "updated_at")
+    list_select_related = ("store_item__list_item", "store_item__store", "purchased_by")
+
+
+@admin.register(PurchaseChange, site=admin_site)
+class PurchaseChangeAdmin(ModelAdmin):
+    list_display = ("purchase", "kind", "changed_by", "created_at")
+    list_filter = ("kind", "created_at")
+    search_fields = ("purchase__store_item__list_item__name", "changed_by__username")
+    readonly_fields = ("public_id", "purchase", "changed_by", "kind", "before", "after", "reason", "created_at", "updated_at")
+    list_select_related = ("purchase__store_item__list_item", "changed_by")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ListOwnershipChange, site=admin_site)
+class ListOwnershipChangeAdmin(ModelAdmin):
+    list_display = ("shopping_list", "previous_owner", "new_owner", "created_at")
+    search_fields = ("shopping_list__name", "previous_owner__username", "new_owner__username")
+    readonly_fields = ("public_id", "shopping_list", "previous_owner", "new_owner", "created_at", "updated_at")
+    list_select_related = ("shopping_list", "previous_owner", "new_owner")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
