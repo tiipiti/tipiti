@@ -168,6 +168,7 @@ UNFOLD = {
     "SITE_URL": "/",
     "SHOW_HISTORY": True,
     "STYLES": ["/static/core/admin.css"],
+    "LOGIN": {"image": "/static/core/images/tipiti-login-landscape.png"},
     "COLORS": {
         "base": {
             "50": "oklch(98.7% .008 85)",

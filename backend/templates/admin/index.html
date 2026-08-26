@@ -1,4 +1,5 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
 
 {% block content %}
 <section class="tipiti-dashboard">
@@ -8,7 +9,7 @@
       <h1>Bom trabalho. Vamos cuidar das compras de hoje.</h1>
       <p>Uma visão rápida do que pede atenção agora.</p>
     </div>
-    <span class="material-symbols-outlined" aria-hidden="true">shopping_basket</span>
+    <img class="tipiti-dashboard__hero-art" src="{% static 'core/images/tipiti-login-landscape.png' %}" alt="">
   </header>
 
   <div class="tipiti-dashboard__summary" aria-label="Resumo de hoje">
@@ -37,7 +38,10 @@
           {% endfor %}
         </ul>
       {% else %}
-        <div class="tipiti-dashboard__empty"><span class="material-symbols-outlined" aria-hidden="true">coffee</span><p>Nenhuma compra registrada hoje.</p></div>
+        <div class="tipiti-dashboard__empty">
+          <img src="{% static 'core/images/undraw-shopping.svg' %}" alt="" aria-hidden="true">
+          <p>Nenhuma compra registrada hoje.</p>
+        </div>
       {% endif %}
     </section>
   </div>

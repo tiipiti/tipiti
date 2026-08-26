@@ -1,10 +1,11 @@
 .tipiti-dashboard { color: oklch(26% .036 150); display: grid; gap: 1.5rem; padding: 1rem 0 2rem; }
-.tipiti-dashboard__hero { align-items: center; background: oklch(95% .04 151); border-radius: 16px; display: flex; justify-content: space-between; min-height: 11rem; overflow: hidden; padding: 2rem; position: relative; }
-.tipiti-dashboard__hero::after { background: oklch(79% .07 184 / .42); border-radius: 50%; content: ""; height: 15rem; position: absolute; right: -5rem; top: -8rem; width: 15rem; }
+.tipiti-dashboard__hero { align-items: center; background: oklch(97% .01 85); border-radius: 16px; display: flex; min-height: 11rem; overflow: hidden; padding: 2rem; position: relative; }
+.tipiti-dashboard__hero::after { background: linear-gradient(90deg, oklch(97% .01 85) 0%, oklch(97% .01 85 / .92) 52%, oklch(97% .01 85 / .05) 100%); content: ""; inset: 0; position: absolute; z-index: 1; }
+.tipiti-dashboard__hero > div { position: relative; z-index: 2; }
 .tipiti-dashboard__hero h1 { color: oklch(26% .055 148); font-size: 1.875rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.16; margin: .25rem 0 .6rem; max-width: 30rem; text-wrap: balance; }
 .tipiti-dashboard__hero p { color: oklch(39% .045 148); margin: 0; }
 .tipiti-dashboard__eyebrow, .tipiti-dashboard__panel-heading p { color: oklch(46% .09 148); font-size: .75rem; font-weight: 700; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
-.tipiti-dashboard__hero > .material-symbols-outlined { color: oklch(38% .08 148); font-size: 4.5rem; position: relative; z-index: 1; }
+.tipiti-dashboard__hero-art { bottom: 0; height: 100%; object-fit: cover; object-position: center; position: absolute; right: 0; width: 54%; }
 .tipiti-dashboard__summary { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
 .tipiti-dashboard__summary article, .tipiti-dashboard__panel { background: oklch(100% 0 0); border: 1px solid oklch(90% .02 90); border-radius: 12px; }
 .tipiti-dashboard__summary article { display: grid; gap: .35rem; padding: 1.15rem; }
@@ -31,5 +32,13 @@
 .tipiti-dashboard__activity span { color: oklch(49% .035 148); font-size: .75rem; }
 .tipiti-dashboard__activity b { font-size: .8125rem; }
 .tipiti-dashboard__empty { align-items: center; color: oklch(46% .04 148); display: flex; gap: .75rem; min-height: 9rem; }
-.tipiti-dashboard__empty .material-symbols-outlined { color: oklch(52% .1 148); font-size: 2rem; }
+.tipiti-dashboard__empty img { height: 4.5rem; object-fit: contain; width: 5rem; }
+.tipiti-login { color: oklch(26% .036 150); }
+.tipiti-login__art { display: block; height: 6.5rem; margin: 0 0 1.25rem; object-fit: contain; width: 8rem; }
+.tipiti-login__heading { border-bottom: 1px solid oklch(90% .02 90); margin-bottom: 1.75rem; padding-bottom: 1.25rem; }
+.tipiti-login__heading p { color: oklch(39% .09 148); font-size: .75rem; font-weight: 700; letter-spacing: .08em; margin: 0 0 .45rem; text-transform: uppercase; }
+.tipiti-login__heading h1 { color: oklch(26% .055 148); font-size: 1.5rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; margin: 0; text-wrap: balance; }
+.tipiti-login__heading span { color: oklch(39% .045 148); display: block; line-height: 1.5; margin-top: .65rem; }
+@media (max-width: 1279px) { .tipiti-login__art { height: 5rem; width: 6rem; } }
+@media (max-width: 640px) { .tipiti-dashboard__hero-art { opacity: .32; width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .tipiti-dashboard__links a { transition: none; } }
