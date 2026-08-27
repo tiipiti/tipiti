@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div class="max-w-2xl space-y-6">
+    <div>
+      <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">Compra de {{ original.store_item }}</p>
+      <h1>{{ title }}</h1>
+      <p>O registro não será apagado: ele sairá dos totais e ficará marcado no histórico.</p>
+    </div>
+    <form method="post" class="bg-white border border-base-200 p-6 rounded-default dark:bg-base-900 dark:border-base-800">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class="mb-4">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+      {% endfor %}
+      <div class="flex gap-3"><button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-default">Confirmar estorno</button><a href="{% url 'tipiti_admin:shopping_purchase_change' original.pk %}">Cancelar</a></div>
+    </form>
+  </div>
+{% endblock %}

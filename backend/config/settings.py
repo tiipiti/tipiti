@@ -222,10 +222,10 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Compras"),
+                "title": _("Planejar"),
                 "items": [
                     {
-                        "title": _("Listas"),
+                        "title": _("Listas e itens"),
                         "icon": "checklist",
                         "link": reverse_lazy(
                             "tipiti_admin:shopping_shoppinglist_changelist"
@@ -248,10 +248,36 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Operação"),
+                "title": _("Registrar"),
                 "items": [
                     {
-                        "title": _("Denúncias"),
+                        "title": _("Registrar compra"),
+                        "icon": "add_shopping_cart",
+                        "link": reverse_lazy(
+                            "tipiti_admin:shopping_shoppingpurchase_add"
+                        ),
+                    },
+                    {
+                        "title": _("Registrar preço"),
+                        "icon": "sell",
+                        "link": reverse_lazy(
+                            "tipiti_admin:shopping_priceobservation_add"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Acompanhar"),
+                "items": [
+                    {
+                        "title": _("Compras registradas"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy(
+                            "tipiti_admin:shopping_shoppingpurchase_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Revisar denúncias"),
                         "icon": "flag",
                         "link": reverse_lazy("tipiti_admin:shopping_report_changelist"),
                     },
@@ -359,7 +385,14 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DJANGO_SONAR = {
-    "excludes": [STATIC_URL, MEDIA_URL, "/admin/", "/api/docs/", "/api/schema/", "/sonar/"],
+    "excludes": [
+        STATIC_URL,
+        MEDIA_URL,
+        "/admin/",
+        "/api/docs/",
+        "/api/schema/",
+        "/sonar/",
+    ],
 }
 
 # VersityGW Object Storage Configuration
