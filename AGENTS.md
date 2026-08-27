@@ -15,7 +15,7 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 
 - Modelos públicos do domínio herdam de `core.models.BaseModel` e expõem `public_id` UUID.
 - As APIs usam Django REST Framework; CRUDes existentes usam `core.viewsets.ViewSetBase` e rotas em `urls.py` ou `rfc_urls.py`.
-- Coleções da API usam `core.pagination.FlexiblePageNumberPagination` (Django `Paginator`); filtros públicos declarativos ficam em `shopping/filters.py` com `django-filter`.
+- Coleções da API usam `core.pagination.FlexiblePageNumberPagination` (Django `Paginator`).
 - Os recursos de compras estão somente sob `/api/v1/`; não há API legada de shopping.
 - Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
 - Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.

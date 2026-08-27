@@ -28,6 +28,3 @@ class BaseModel(TimeStampedModel):
 
     class Meta:
         abstract = True
-
-
-PublicIdModel = BaseModel
