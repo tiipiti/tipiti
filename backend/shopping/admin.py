@@ -5,6 +5,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.forms import BaseFormSet, formset_factory
 from django.forms.models import BaseInlineFormSet
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -39,7 +40,12 @@ from .models import (
     StoreItem,
     SyncOperation,
 )
-from .services import correct_purchase, transfer_ownership, void_purchase
+from .services import (
+    correct_purchase,
+    finalize_purchase,
+    transfer_ownership,
+    void_purchase,
+)
 
 UNIT_CHOICES = (
     ("un", "Unidade"),
@@ -83,6 +89,65 @@ class ListMembershipInlineFormSet(BaseInlineFormSet):
         return membership
 
 
+class PurchaseRegistrationForm(forms.Form):
+    purchased_on = forms.DateField(label="Data da compra", initial=timezone.localdate)
+    branch = forms.ModelChoiceField(
+        label="Onde comprou?",
+        help_text="Opcional",
+        queryset=MarketBranch.objects.filter(is_active=True).order_by("name"),
+        required=False,
+    )
+
+
+class PurchaseRegistrationItemForm(forms.Form):
+    list_item = forms.UUIDField(widget=forms.HiddenInput)
+    selected = forms.BooleanField(label="Comprei", required=False)
+    quantity = forms.DecimalField(
+        label="Quantidade",
+        decimal_places=3,
+        max_digits=10,
+        min_value=Decimal("0.001"),
+        required=False,
+    )
+    unit_price = forms.DecimalField(
+        label="Preço pago",
+        decimal_places=2,
+        max_digits=10,
+        min_value=Decimal("0"),
+        required=False,
+    )
+
+
+class PurchaseRegistrationItemFormSet(BaseFormSet):
+    def __init__(self, *args, pending_items, **kwargs):
+        self.allowed_item_ids = {str(item.public_id) for item in pending_items}
+        super().__init__(*args, **kwargs)
+        for form, item in zip(self.forms, pending_items):
+            form.item_name = item.name
+            form.item_unit = item.unit
+
+    def clean(self):
+        super().clean()
+        selected_items = set()
+        has_selected_item = False
+        for form in self.forms:
+            if not form.cleaned_data or not form.cleaned_data.get("selected"):
+                continue
+            has_selected_item = True
+            list_item_id = str(form.cleaned_data["list_item"])
+            if list_item_id not in self.allowed_item_ids:
+                raise DjangoValidationError("Item da lista não encontrado.")
+            if list_item_id in selected_items:
+                form.add_error("selected", "Este item já foi informado.")
+            selected_items.add(list_item_id)
+            if form.cleaned_data.get("quantity") is None:
+                form.add_error("quantity", "Informe quanto você comprou.")
+            if form.cleaned_data.get("unit_price") is None:
+                form.add_error("unit_price", "Informe quanto você pagou.")
+        if not has_selected_item:
+            raise DjangoValidationError("Marque pelo menos um item comprado.")
+
+
 class ShoppingPurchaseItemInlineFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -110,21 +175,36 @@ class ShoppingPurchaseItemInlineFormSet(BaseInlineFormSet):
                 )
 
 
+class ShoppingPurchaseItemAdminForm(forms.ModelForm):
+    class Meta:
+        model = ShoppingPurchaseItem
+        fields = ("list_item", "quantity", "unit_price")
+        labels = {
+            "list_item": "Item da lista",
+            "quantity": "Quantidade",
+            "unit_price": "Preço unitário",
+        }
+
+    def save(self, commit=True):
+        item = super().save(commit=False)
+        item.description = item.list_item.name
+        if commit:
+            item.save()
+            self.save_m2m()
+        return item
+
+
 class ShoppingPurchaseItemInline(TabularInline):
     model = ShoppingPurchaseItem
+    form = ShoppingPurchaseItemAdminForm
     formset = ShoppingPurchaseItemInlineFormSet
+    verbose_name = "item comprado"
+    verbose_name_plural = "Itens comprados"
     extra = 1
     min_num = 1
     validate_min = True
-    autocomplete_fields = ("list_item", "product")
-    fields = (
-        "list_item",
-        "product",
-        "description",
-        "quantity",
-        "unit_price",
-        "total_price",
-    )
+    autocomplete_fields = ("list_item",)
+    fields = ("list_item", "quantity", "unit_price", "total_price")
     readonly_fields = ("total_price",)
 
     def get_extra(self, request, obj=None, **kwargs):
@@ -171,15 +251,23 @@ class PurchaseVoidForm(forms.Form):
 class ListMembershipInline(TabularInline):
     model = ListMembership
     formset = ListMembershipInlineFormSet
+    verbose_name = "membro"
+    verbose_name_plural = "Membros"
+    tab = True
     extra = 0
     autocomplete_fields = ("user",)
-    readonly_fields = ("public_id", "role", "joined_at", "created_at", "updated_at")
+    fields = ("user", "role")
+    readonly_fields = ("role",)
 
 
-class ListItemInline(TabularInline):
+class ListItemInline(UnitChoicesAdminMixin, TabularInline):
     model = ListItem
+    verbose_name = "item"
+    verbose_name_plural = "Itens"
+    tab = True
     extra = 0
-    readonly_fields = ("public_id", "checked_at", "created_at", "updated_at")
+    fields = ("name", "quantity", "unit", "is_checked", "purchased_quantity")
+    readonly_fields = ("purchased_quantity",)
 
 
 @admin.register(ShoppingList, site=admin_site)
@@ -187,21 +275,10 @@ class ShoppingListAdmin(ModelAdmin):
     list_display = ("name", "archived_at", "created_at", "updated_at")
     search_fields = ("name",)
     list_filter = ("archived_at",)
-    readonly_fields = ("public_id", "created_at", "updated_at")
     inlines = (ListMembershipInline, ListItemInline)
     actions = ("archive", "restore")
     change_form_template = "admin/shopping/shoppinglist/change_form.html"
-    fieldsets = (
-        ("Lista", {"fields": ("name",)}),
-        ("Estado", {"fields": ("archived_at",)}),
-        (
-            "Sistema",
-            {
-                "classes": ("collapse",),
-                "fields": ("public_id", "created_at", "updated_at"),
-            },
-        ),
-    )
+    fieldsets = (("Lista", {"fields": ("name",)}),)
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -224,6 +301,11 @@ class ShoppingListAdmin(ModelAdmin):
         opts = self.model._meta
         return [
             path(
+                "<path:object_id>/register-purchase/",
+                self.admin_site.admin_view(self.register_purchase_view),
+                name=f"{opts.app_label}_{opts.model_name}_register_purchase",
+            ),
+            path(
                 "<path:object_id>/transfer-ownership/",
                 self.admin_site.admin_view(self.transfer_ownership_view),
                 name=f"{opts.app_label}_{opts.model_name}_transfer_ownership",
@@ -240,7 +322,91 @@ class ShoppingListAdmin(ModelAdmin):
                     args=(shopping_list.pk,),
                 ),
             }
+            if (
+                shopping_list.archived_at is None
+                and shopping_list.items.filter(is_checked=False).exists()
+            ):
+                extra_context["register_purchase_url"] = reverse(
+                    f"{self.admin_site.name}:shopping_shoppinglist_register_purchase",
+                    args=(shopping_list.pk,),
+                )
         return super().change_view(request, object_id, form_url, extra_context)
+
+    def register_purchase_view(self, request, object_id):
+        shopping_list = get_object_or_404(self.get_queryset(request), pk=object_id)
+        pending_items = list(
+            shopping_list.items.filter(is_checked=False).only(
+                "public_id", "name", "quantity", "purchased_quantity", "unit"
+            )
+        )
+        item_formset = formset_factory(
+            PurchaseRegistrationItemForm,
+            formset=PurchaseRegistrationItemFormSet,
+            extra=0,
+        )
+        initial = [
+            {
+                "list_item": item.public_id,
+                "quantity": item.quantity - item.purchased_quantity,
+            }
+            for item in pending_items
+        ]
+        header_form = PurchaseRegistrationForm(request.POST or None)
+        formset = item_formset(
+            request.POST or None,
+            prefix="items",
+            initial=initial,
+            pending_items=pending_items,
+        )
+        if request.method == "POST" and header_form.is_valid() and formset.is_valid():
+            selected_items = [
+                {
+                    "list_item_id": form.cleaned_data["list_item"],
+                    "quantity": form.cleaned_data["quantity"],
+                    "unit_price": form.cleaned_data["unit_price"],
+                }
+                for form in formset.forms
+                if form.cleaned_data.get("selected")
+            ]
+            try:
+                purchase = finalize_purchase(
+                    request.user,
+                    shopping_list,
+                    {
+                        "client_operation_id": uuid.uuid4(),
+                        "purchased_on": header_form.cleaned_data["purchased_on"],
+                        "market_id": (
+                            header_form.cleaned_data["branch"].public_id
+                            if header_form.cleaned_data["branch"]
+                            else None
+                        ),
+                        "items": selected_items,
+                    },
+                )
+            except APIException as error:
+                formset._non_form_errors = formset.error_class([str(error.detail)])
+            else:
+                item_count = len(selected_items)
+                messages.success(
+                    request,
+                    f"Compra registrada: {item_count} item{'s' if item_count != 1 else ''} concluído{'s' if item_count != 1 else ''} · R$ {purchase.total_amount:.2f}".replace(
+                        ".", ","
+                    ),
+                )
+                return redirect(self._change_url(shopping_list))
+        return TemplateResponse(
+            request,
+            "admin/shopping/shoppingpurchase/register_from_list.html",
+            {
+                **self.admin_site.each_context(request),
+                "opts": ShoppingPurchase._meta,
+                "original": shopping_list,
+                "title": "Registrar compra",
+                "shopping_list": shopping_list,
+                "header_form": header_form,
+                "item_formset": formset,
+            },
+        )
 
     def transfer_ownership_view(self, request, object_id):
         shopping_list = get_object_or_404(self.get_queryset(request), pk=object_id)
@@ -288,6 +454,7 @@ class ListMembershipAdmin(ModelAdmin):
     search_fields = ("shopping_list__name", "user__username", "user__email")
     autocomplete_fields = ("shopping_list", "user")
     readonly_fields = ("public_id", "role", "joined_at", "created_at", "updated_at")
+    fields = ("shopping_list", "user")
     list_select_related = ("shopping_list", "user")
 
     def has_delete_permission(self, request, obj=None):
@@ -311,11 +478,17 @@ class ListInviteAdmin(ModelAdmin):
     list_filter = ("accepted_at", "expires_at")
     search_fields = ("shopping_list__name", "invited_email", "token")
     autocomplete_fields = ("shopping_list", "created_by")
-    readonly_fields = ("public_id", "token", "created_at", "updated_at")
+    readonly_fields = ("public_id", "token", "accepted_at", "created_at", "updated_at")
+    fields = ("shopping_list", "invited_email", "expires_at")
     list_select_related = ("shopping_list", "created_by")
 
     def has_delete_permission(self, request, obj=None):
         return obj is None or obj.accepted_at is None
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(ListItem, site=admin_site)
@@ -338,6 +511,7 @@ class ListItemAdmin(UnitChoicesAdminMixin, ModelAdmin):
         "created_at",
         "updated_at",
     )
+    fields = ("shopping_list", "name", "quantity", "unit", "is_checked")
     list_select_related = ("shopping_list",)
 
 
@@ -377,6 +551,7 @@ class MarketNetworkAdmin(ModelAdmin):
     list_filter = ("is_active",)
     readonly_fields = ("public_id", "normalized_name", "created_at", "updated_at")
     actions = ("activate", "deactivate")
+    fields = ("name", "tax_id", "is_active")
 
     @admin.action(description="Ativar redes selecionadas")
     def activate(self, request, queryset):
@@ -445,6 +620,7 @@ class FavoriteMarketAdmin(ModelAdmin):
     )
     autocomplete_fields = ("user", "branch")
     readonly_fields = ("public_id", "created_at", "updated_at")
+    fields = ("user", "branch")
     list_select_related = ("user", "branch__network")
 
 
@@ -483,6 +659,7 @@ class ProductAliasAdmin(ModelAdmin):
     search_fields = ("alias", "product__name")
     autocomplete_fields = ("product",)
     readonly_fields = ("public_id", "normalized_alias", "created_at", "updated_at")
+    fields = ("product", "alias")
     list_select_related = ("product",)
 
 
@@ -497,14 +674,6 @@ class PriceObservationAdmin(ModelAdmin):
     list_select_related = ("product", "branch")
     fieldsets = (
         ("Preço observado", {"fields": ("product", "branch", "amount", "observed_on")}),
-        ("Validação", {"fields": ("is_valid",)}),
-        (
-            "Sistema",
-            {
-                "classes": ("collapse",),
-                "fields": ("created_by", "public_id", "created_at", "updated_at"),
-            },
-        ),
     )
 
     @admin.action(description="Validar preços selecionados")
@@ -551,14 +720,7 @@ class PromotionAdmin(ModelAdmin):
                 ),
             },
         ),
-        ("Vigência e validação", {"fields": ("starts_on", "ends_on", "is_valid")}),
-        (
-            "Sistema",
-            {
-                "classes": ("collapse",),
-                "fields": ("created_by", "public_id", "created_at", "updated_at"),
-            },
-        ),
+        ("Vigência", {"fields": ("starts_on", "ends_on")}),
     )
 
     @admin.action(description="Validar promoções selecionadas")
@@ -655,6 +817,15 @@ class ShoppingPurchaseItemAdmin(ModelAdmin):
     readonly_fields = ("public_id", "total_price", "created_at", "updated_at")
     list_select_related = ("purchase",)
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.method in ("GET", "HEAD")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(SyncOperation, site=admin_site)
 class SyncOperationAdmin(ModelAdmin):
@@ -748,6 +919,7 @@ class StoreItemAdmin(ModelAdmin):
     list_filter = ("store",)
     autocomplete_fields = ("list_item", "store")
     readonly_fields = ("public_id", "price_updated_at", "created_at", "updated_at")
+    fields = ("list_item", "store", "current_unit_price")
     list_select_related = ("list_item", "store")
 
 

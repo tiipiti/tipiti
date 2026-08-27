@@ -43,13 +43,22 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 
 from config.admin_site import site as admin_site
 
-from .models import ConsentHistory, FacebookIdentity, GoogleIdentity, UserProfile, UserSession
+from .models import (
+    ConsentHistory,
+    FacebookIdentity,
+    GoogleIdentity,
+    UserProfile,
+    UserSession,
+)
 
 ADMIN_LIST_PER_PAGE = 10
 
 
 class UserProfileInline(StackedInline):
     model = UserProfile
+    verbose_name = "perfil"
+    verbose_name_plural = "Perfil"
+    tab = True
     can_delete = False
     extra = 0
     fields = (
@@ -62,6 +71,9 @@ class UserProfileInline(StackedInline):
 
 class UserSessionInline(StackedInline):
     model = UserSession
+    verbose_name = "sessão"
+    verbose_name_plural = "Sessões"
+    tab = True
     can_delete = False
     extra = 0
     readonly_fields = ("session_key", "created_at")
@@ -190,7 +202,14 @@ class ConsentHistoryAdmin(ModelAdmin):
     list_filter = ("method", "terms_version", "accepted_at")
     search_fields = ("user__username", "user__email", "ip_address", "user_agent")
     autocomplete_fields = ("user",)
-    readonly_fields = ("user", "terms_version", "accepted_at", "ip_address", "user_agent", "method")
+    readonly_fields = (
+        "user",
+        "terms_version",
+        "accepted_at",
+        "ip_address",
+        "user_agent",
+        "method",
+    )
 
     def has_add_permission(self, request):
         return False

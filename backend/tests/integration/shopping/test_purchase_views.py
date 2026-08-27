@@ -5,6 +5,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.test.client import RequestFactory
+from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from accounts.models import ConsentHistory
@@ -34,6 +35,124 @@ from shopping.models import (
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 )
 class PurchaseViewSetIntegrationTests(APITestCase):
+    def test_list_change_links_to_its_purchase_form(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        ListItem.objects.create(
+            shopping_list=shopping_list, name="Arroz", quantity=2, unit="un"
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "tipiti_admin:shopping_shoppinglist_change", args=(shopping_list.pk,)
+            )
+        )
+
+        self.assertContains(response, "Registrar compra")
+        self.assertContains(
+            response,
+            reverse(
+                "tipiti_admin:shopping_shoppinglist_register_purchase",
+                args=(shopping_list.pk,),
+            ),
+        )
+
+    def test_list_purchase_form_shows_only_its_pending_items(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        ListItem.objects.create(
+            shopping_list=shopping_list, name="Arroz", quantity=2, unit="un"
+        )
+        other_list = ShoppingList.objects.create(name="Outra lista")
+        ListItem.objects.create(
+            shopping_list=other_list, name="Item de outra lista", quantity=1, unit="un"
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse(
+                "tipiti_admin:shopping_shoppinglist_register_purchase",
+                args=(shopping_list.pk,),
+            )
+        )
+
+        self.assertContains(response, "Arroz")
+        self.assertNotContains(response, "Item de outra lista")
+        self.assertContains(response, "Onde comprou?")
+        self.assertNotContains(response, "Produto")
+
+    def test_list_purchase_registers_without_a_market_and_confirms(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        list_item = ListItem.objects.create(
+            shopping_list=shopping_list, name="Arroz", quantity=2, unit="un"
+        )
+        self.client.force_login(user)
+        register_url = reverse(
+            "tipiti_admin:shopping_shoppinglist_register_purchase",
+            args=(shopping_list.pk,),
+        )
+
+        response = self.client.post(
+            register_url,
+            {
+                "purchased_on": date.today().isoformat(),
+                "branch": "",
+                "items-TOTAL_FORMS": "1",
+                "items-INITIAL_FORMS": "0",
+                "items-MIN_NUM_FORMS": "0",
+                "items-MAX_NUM_FORMS": "1000",
+                "items-0-list_item": list_item.public_id,
+                "items-0-selected": "on",
+                "items-0-quantity": "2",
+                "items-0-unit_price": "16.45",
+            },
+        )
+
+        list_url = reverse(
+            "tipiti_admin:shopping_shoppinglist_change", args=(shopping_list.pk,)
+        )
+        self.assertRedirects(response, list_url, fetch_redirect_response=False)
+        purchase = ShoppingPurchase.objects.get()
+        self.assertIsNone(purchase.branch)
+        self.assertEqual(purchase.total_amount, Decimal("32.90"))
+        list_item.refresh_from_db()
+        self.assertTrue(list_item.is_checked)
+        response = self.client.get(list_url)
+        self.assertContains(response, "Compra registrada: 1 item concluído · R$ 32,90")
+
+    def test_list_purchase_rejects_item_from_another_list(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        other_list = ShoppingList.objects.create(name="Outra lista")
+        foreign_item = ListItem.objects.create(
+            shopping_list=other_list, name="Item de outra lista", quantity=1, unit="un"
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse(
+                "tipiti_admin:shopping_shoppinglist_register_purchase",
+                args=(shopping_list.pk,),
+            ),
+            {
+                "purchased_on": date.today().isoformat(),
+                "branch": "",
+                "items-TOTAL_FORMS": "1",
+                "items-INITIAL_FORMS": "0",
+                "items-MIN_NUM_FORMS": "0",
+                "items-MAX_NUM_FORMS": "1000",
+                "items-0-list_item": foreign_item.public_id,
+                "items-0-selected": "on",
+                "items-0-quantity": "1",
+                "items-0-unit_price": "7.50",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Item da lista não encontrado")
+
     def test_admin_registers_a_complete_purchase_with_its_items(self):
         user = User.objects.create_superuser(username="admin", password="password")
         shopping_list = ShoppingList.objects.create(name="Feira")
@@ -56,8 +175,6 @@ class PurchaseViewSetIntegrationTests(APITestCase):
                 "items-MIN_NUM_FORMS": "1",
                 "items-MAX_NUM_FORMS": "1000",
                 "items-0-list_item": list_item.pk,
-                "items-0-product": "",
-                "items-0-description": "Abacate",
                 "items-0-quantity": "2",
                 "items-0-unit_price": "7.50",
             },
@@ -71,9 +188,38 @@ class PurchaseViewSetIntegrationTests(APITestCase):
             ShoppingPurchaseItem.objects.get(purchase=purchase).total_price,
             Decimal("15.00"),
         )
+        self.assertEqual(
+            ShoppingPurchaseItem.objects.get(purchase=purchase).description,
+            "Abacate",
+        )
         list_item.refresh_from_db()
         self.assertEqual(list_item.purchased_quantity, Decimal("2"))
         self.assertTrue(list_item.is_checked)
+
+    def test_admin_purchase_form_asks_for_only_the_list_item(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        self.client.force_login(user)
+
+        response = self.client.get("/admin/shopping/shoppingpurchase/add/")
+
+        self.assertContains(response, "Item da lista")
+        self.assertNotContains(response, "field-product")
+        self.assertNotContains(response, "field-description")
+
+    def test_admin_list_uses_tabs_without_operational_metadata(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        self.client.force_login(user)
+
+        response = self.client.get(
+            f"/admin/shopping/shoppinglist/{shopping_list.pk}/change/"
+        )
+
+        self.assertContains(response, 'href="#general"')
+        self.assertContains(response, "Itens")
+        self.assertContains(response, "Membros")
+        self.assertNotContains(response, "Archived at")
+        self.assertNotContains(response, "Public id")
 
     def test_admin_corrects_a_legacy_purchase_through_the_audited_flow(self):
         user = User.objects.create_superuser(username="admin", password="password")

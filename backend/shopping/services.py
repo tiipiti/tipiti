@@ -27,7 +27,9 @@ User = get_user_model()
 
 
 def membership_for(shopping_list: ShoppingList, user) -> ListMembership:
-    membership = ListMembership.objects.filter(shopping_list=shopping_list, user=user).first()
+    membership = ListMembership.objects.filter(
+        shopping_list=shopping_list, user=user
+    ).first()
     if membership is None:
         raise PermissionDenied("Você não participa desta lista.")
     return membership
@@ -57,9 +59,11 @@ def purchase_snapshot(purchase: Purchase) -> dict[str, str | None]:
 
 @transaction.atomic
 def correct_purchase(user, purchase: Purchase, changes: dict) -> Purchase:
-    purchase = Purchase.objects.select_for_update().select_related(
-        "store_item__list_item__shopping_list"
-    ).get(pk=purchase.pk)
+    purchase = (
+        Purchase.objects.select_for_update()
+        .select_related("store_item__list_item__shopping_list")
+        .get(pk=purchase.pk)
+    )
     if purchase.purchased_by_id != user.id:
         raise PermissionDenied("Somente quem registrou a compra pode corrigi-la.")
     membership_for(purchase.store_item.list_item.shopping_list, user)
@@ -79,15 +83,19 @@ def correct_purchase(user, purchase: Purchase, changes: dict) -> Purchase:
     )
     purchase.store_item.current_unit_price = purchase.unit_price
     purchase.store_item.price_updated_at = timezone.now()
-    purchase.store_item.save(update_fields=["current_unit_price", "price_updated_at", "updated_at"])
+    purchase.store_item.save(
+        update_fields=["current_unit_price", "price_updated_at", "updated_at"]
+    )
     return purchase
 
 
 @transaction.atomic
 def void_purchase(user, purchase: Purchase, *, reason: str = "") -> Purchase:
-    purchase = Purchase.objects.select_for_update().select_related(
-        "store_item__list_item__shopping_list"
-    ).get(pk=purchase.pk)
+    purchase = (
+        Purchase.objects.select_for_update()
+        .select_related("store_item__list_item__shopping_list")
+        .get(pk=purchase.pk)
+    )
     if purchase.purchased_by_id != user.id:
         raise PermissionDenied("Somente quem registrou a compra pode estorná-la.")
     membership_for(purchase.store_item.list_item.shopping_list, user)
@@ -108,20 +116,33 @@ def void_purchase(user, purchase: Purchase, *, reason: str = "") -> Purchase:
         after=purchase_snapshot(purchase),
         reason=reason,
     )
-    replacement = Purchase.objects.filter(
-        store_item=purchase.store_item,
-        voided_at__isnull=True,
-    ).exclude(pk=purchase.pk).order_by("-purchased_at", "-created_at").first()
-    purchase.store_item.current_unit_price = replacement.unit_price if replacement else None
+    replacement = (
+        Purchase.objects.filter(
+            store_item=purchase.store_item,
+            voided_at__isnull=True,
+        )
+        .exclude(pk=purchase.pk)
+        .order_by("-purchased_at", "-created_at")
+        .first()
+    )
+    purchase.store_item.current_unit_price = (
+        replacement.unit_price if replacement else None
+    )
     purchase.store_item.price_updated_at = timezone.now() if replacement else None
-    purchase.store_item.save(update_fields=["current_unit_price", "price_updated_at", "updated_at"])
+    purchase.store_item.save(
+        update_fields=["current_unit_price", "price_updated_at", "updated_at"]
+    )
     return purchase
 
 
 @transaction.atomic
-def transfer_ownership(user, shopping_list: ShoppingList, member_public_id) -> ListMembership:
+def transfer_ownership(
+    user, shopping_list: ShoppingList, member_public_id
+) -> ListMembership:
     shopping_list = ShoppingList.objects.select_for_update().get(pk=shopping_list.pk)
-    memberships = ListMembership.objects.select_for_update().filter(shopping_list=shopping_list)
+    memberships = ListMembership.objects.select_for_update().filter(
+        shopping_list=shopping_list
+    )
     current_owner = memberships.get(role=ListMembership.Role.OWNER)
     if current_owner.user_id != user.id:
         raise PermissionDenied("Somente o dono pode transferir a propriedade.")
@@ -154,7 +175,9 @@ def create_shopping_list(user, *, name: str) -> ShoppingList:
 
 
 @transaction.atomic
-def create_invite(shopping_list: ShoppingList, owner, *, invited_email, expires_at) -> ListInvite:
+def create_invite(
+    shopping_list: ShoppingList, owner, *, invited_email, expires_at
+) -> ListInvite:
     owner_for(shopping_list, owner)
     invite = ListInvite.objects.create(
         shopping_list=shopping_list,
@@ -162,7 +185,9 @@ def create_invite(shopping_list: ShoppingList, owner, *, invited_email, expires_
         created_by=owner,
         expires_at=expires_at or timezone.now() + timedelta(days=7),
     )
-    if invited_email and (recipient := User.objects.filter(email__iexact=invited_email).first()):
+    if invited_email and (
+        recipient := User.objects.filter(email__iexact=invited_email).first()
+    ):
         notify(
             user=recipient,
             notification_type=NotificationType.LIST_INVITE,
@@ -174,10 +199,16 @@ def create_invite(shopping_list: ShoppingList, owner, *, invited_email, expires_
 
 @transaction.atomic
 def accept_invite(invite: ListInvite, user) -> ListMembership:
-    invite = ListInvite.objects.select_for_update().select_related("shopping_list").get(pk=invite.pk)
+    invite = (
+        ListInvite.objects.select_for_update()
+        .select_related("shopping_list")
+        .get(pk=invite.pk)
+    )
     if not invite.accepts_email(user.email):
         raise PermissionDenied("Este convite é destinado a outro e-mail.")
-    existing = ListMembership.objects.filter(shopping_list=invite.shopping_list, user=user).first()
+    existing = ListMembership.objects.filter(
+        shopping_list=invite.shopping_list, user=user
+    ).first()
     if invite.accepted_at is not None:
         if existing:
             return existing
@@ -196,37 +227,66 @@ def accept_invite(invite: ListInvite, user) -> ListMembership:
 
 @transaction.atomic
 def finalize_purchase(user, shopping_list, data):
-    existing = ShoppingPurchase.objects.filter(user=user, client_operation_id=data["client_operation_id"]).first()
+    existing = ShoppingPurchase.objects.filter(
+        user=user, client_operation_id=data["client_operation_id"]
+    ).first()
     if existing:
         return existing
-    branch = MarketBranch.objects.filter(public_id=data["market_id"], is_active=True).first()
-    if not branch:
-        raise ValidationError({"market_id": "Mercado não encontrado."})
+    branch = None
+    if market_id := data.get("market_id"):
+        branch = MarketBranch.objects.filter(
+            public_id=market_id, is_active=True
+        ).first()
+        if not branch:
+            raise ValidationError({"market_id": "Mercado não encontrado."})
     item_ids = [item["list_item_id"] for item in data["items"]]
     list_items = {
         item.public_id: item
-        for item in ListItem.objects.select_for_update().filter(shopping_list=shopping_list, public_id__in=item_ids)
+        for item in ListItem.objects.select_for_update().filter(
+            shopping_list=shopping_list, public_id__in=item_ids
+        )
     }
     if len(list_items) != len(set(item_ids)):
         raise ValidationError({"items": "Item da lista não encontrado."})
     purchase = ShoppingPurchase.objects.create(
-        user=user, branch=branch, shopping_list=shopping_list,
-        purchased_on=data["purchased_on"], client_operation_id=data["client_operation_id"],
+        user=user,
+        branch=branch,
+        shopping_list=shopping_list,
+        purchased_on=data["purchased_on"],
+        client_operation_id=data["client_operation_id"],
     )
     total = 0
     for payload in data["items"]:
         item = list_items[payload["list_item_id"]]
         if item.purchased_quantity + payload["quantity"] > item.quantity:
-            raise ValidationError({"items": f"Quantidade maior que a pendente para {item.name}."})
-        product = Product.objects.filter(public_id=payload.get("product_id")).first() if payload.get("product_id") else None
+            raise ValidationError(
+                {"items": f"Quantidade maior que a pendente para {item.name}."}
+            )
+        product = (
+            Product.objects.filter(public_id=payload.get("product_id")).first()
+            if payload.get("product_id")
+            else None
+        )
         purchase_item = ShoppingPurchaseItem.objects.create(
-            purchase=purchase, list_item=item, product=product, description=item.name,
-            quantity=payload["quantity"], unit_price=payload["unit_price"], total_price=0,
+            purchase=purchase,
+            list_item=item,
+            product=product,
+            description=item.name,
+            quantity=payload["quantity"],
+            unit_price=payload["unit_price"],
+            total_price=0,
         )
         total += purchase_item.total_price
         item.purchased_quantity += payload["quantity"]
         item.is_checked = item.purchased_quantity >= item.quantity
-        item.save(update_fields=["purchased_quantity", "is_checked", "checked_at", "updated_at"])
+        item.save(
+            update_fields=[
+                "purchased_quantity",
+                "is_checked",
+                "checked_at",
+                "updated_at",
+            ]
+        )
     purchase.total_amount = total
     purchase.save(update_fields=["total_amount", "updated_at"])
     return purchase
@@ -234,15 +294,21 @@ def finalize_purchase(user, shopping_list, data):
 
 @transaction.atomic
 def apply_sync_operation(user, operation):
-    model = {"shopping_list": ShoppingList, "shopping_list_item": ListItem}.get(operation["entity_type"])
+    model = {"shopping_list": ShoppingList, "shopping_list_item": ListItem}.get(
+        operation["entity_type"]
+    )
     if model is None or operation["operation_type"] != "update":
         return SyncOperation.Status.CONFLICT
     queryset = model.objects.select_for_update()
     if model is ShoppingList:
-        instance = queryset.filter(public_id=operation.get("entity_id"), memberships__user=user).first()
+        instance = queryset.filter(
+            public_id=operation.get("entity_id"), memberships__user=user
+        ).first()
         fields = {"name"}
     else:
-        instance = queryset.filter(public_id=operation.get("entity_id"), shopping_list__memberships__user=user).first()
+        instance = queryset.filter(
+            public_id=operation.get("entity_id"), shopping_list__memberships__user=user
+        ).first()
         fields = {"name", "quantity", "unit", "is_checked"}
     if not instance:
         return SyncOperation.Status.CONFLICT
@@ -250,7 +316,11 @@ def apply_sync_operation(user, operation):
         if field in fields:
             setattr(instance, field, value)
     instance.version += 1
-    update_fields = [*set(operation["payload"]).intersection(fields), "version", "updated_at"]
+    update_fields = [
+        *set(operation["payload"]).intersection(fields),
+        "version",
+        "updated_at",
+    ]
     if "is_checked" in update_fields:
         update_fields.append("checked_at")
     instance.save(update_fields=update_fields)
