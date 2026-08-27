@@ -8,7 +8,7 @@ from .models import ListItem, ShoppingList
 
 class ListItemInline(TabularInline):
     model = ListItem
-    fields = ("name", "completed")
+    fields = ("name", "quantity", "price", "completed")
     extra = 1
 
 

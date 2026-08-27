@@ -17,5 +17,5 @@ class ShoppingListSerializer(PublicIdSerializer):
 class ListItemSerializer(PublicIdSerializer):
     class Meta:
         model = ListItem
-        fields = ["id", "name", "completed", "created_at", "updated_at"]
+        fields = ["id", "name", "quantity", "price", "completed", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]

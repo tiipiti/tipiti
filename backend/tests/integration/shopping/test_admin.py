@@ -14,13 +14,16 @@ def test_admin_creates_a_list_with_a_named_item_and_checkbox(client):
     response = client.post(reverse("tipiti_admin:shopping_shoppinglist_add"), {
         "owner": owner.pk, "name": "Feira", "items-TOTAL_FORMS": "1", "items-INITIAL_FORMS": "0",
         "items-MIN_NUM_FORMS": "0", "items-MAX_NUM_FORMS": "1000", "items-0-name": "2 caixas de leite",
-        "items-0-completed": "on", "_save": "Save",
+        "items-0-quantity": "2", "items-0-price": "5.50", "items-0-completed": "on", "_save": "Save",
     })
 
     assert response.status_code == 302
     shopping_list = ShoppingList.objects.get(name="Feira")
     assert shopping_list.owner == owner
-    assert ListItem.objects.get(shopping_list=shopping_list, name="2 caixas de leite").completed
+    item = ListItem.objects.get(shopping_list=shopping_list, name="2 caixas de leite")
+    assert item.completed
+    assert item.quantity == 2
+    assert item.price == 5.50
 
 
 @pytest.mark.django_db
@@ -35,4 +38,6 @@ def test_admin_change_page_shows_only_name_and_completed_for_items(client):
 
     assert response.status_code == 200
     assert "Arroz" in response.content.decode()
-    assert "Quantidade" not in response.content.decode()
+    content = response.content.decode()
+    assert 'name="items-0-quantity"' in content
+    assert 'name="items-0-price"' in content
