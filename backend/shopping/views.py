@@ -1,5 +1,3 @@
-import hashlib
-import json
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
@@ -66,8 +64,7 @@ class SyncViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = SyncRequestSerializer(data=request.data); serializer.is_valid(raise_exception=True); statuses = []
         for operation in serializer.validated_data["operations"]:
-            payload_hash = hashlib.sha256(json.dumps(operation["payload"], sort_keys=True, default=str).encode()).hexdigest()
-            record, created = SyncOperation.objects.get_or_create(user=request.user, client_operation_id=operation["client_operation_id"], defaults={**operation, "device_id": serializer.validated_data["device_id"], "payload_hash": payload_hash})
+            record, created = SyncOperation.objects.get_or_create(user=request.user, client_operation_id=operation["client_operation_id"], defaults={**operation, "device_id": serializer.validated_data["device_id"]})
             statuses.append({"client_operation_id": str(record.client_operation_id), "status": apply_sync_operation(request.user, operation) if created else record.status})
         return Response({"operations": statuses})
 

@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.db.models import Sum
 from django.urls import reverse
 from django.utils import timezone
 from unfold.sites import UnfoldAdminSite

@@ -130,7 +130,7 @@ class SyncOperation(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sync_operations")
     device_id = models.UUIDField(); client_operation_id = models.UUIDField()
     entity_type = models.CharField(max_length=64, choices=Entity.choices); operation_type = models.CharField(max_length=16)
-    payload_hash = models.CharField(max_length=64); base_version = models.PositiveIntegerField(default=0)
+    base_version = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CONFIRMED); received_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "client_operation_id"], name="sync_operation_user_unique")]
@@ -158,8 +158,6 @@ class ShareLink(BaseModel):
                 name="share_link_one_target",
             )
         ]
-    @property
-    def is_active(self): return self.revoked_at is None and self.expires_at > timezone.now()
 
 class Report(BaseModel):
     class Status(models.TextChoices): OPEN = "open", "Open"; RESOLVED = "resolved", "Resolved"
@@ -191,6 +189,4 @@ class ListInvite(BaseModel):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_list_invites")
     expires_at = models.DateTimeField(); accepted_at = models.DateTimeField(null=True, blank=True)
     class Meta: indexes = [models.Index(fields=["token"])]
-    @property
-    def is_pending(self): return self.accepted_at is None and self.expires_at > timezone.now()
     def accepts_email(self, email): return not self.invited_email or self.invited_email.casefold() == email.casefold()

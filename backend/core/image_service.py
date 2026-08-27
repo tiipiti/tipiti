@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from PIL import Image, ImageOps
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -70,42 +70,6 @@ class ImageService:
             }.get(img.format, "application/octet-stream")
         except Exception:
             return "application/octet-stream"
-
-    @staticmethod
-    def optimize_bytes(
-        data: bytes,
-        max_dimension: int = _MAX_COMPRESS_DIMENSION,
-        quality: int = _COMPRESS_QUALITY,
-    ) -> bytes:
-        try:
-            with Image.open(io.BytesIO(data)) as img:
-                exif = img.getexif()
-                needs_orientation_fix = exif.get(274) not in (None, 1)
-                needs_resize = img.width > max_dimension or img.height > max_dimension
-                fmt = img.format or "JPEG"
-                needs_reencode = (
-                    needs_orientation_fix
-                    or needs_resize
-                    or img.mode not in ("RGB", "RGBA")
-                )
-
-                if not needs_reencode:
-                    return data
-
-                img = ImageOps.exif_transpose(img)
-                if img.width > max_dimension or img.height > max_dimension:
-                    img.thumbnail((max_dimension, max_dimension), Image.LANCZOS)
-                if img.mode not in ("RGB", "RGBA"):
-                    img = img.convert("RGB")
-                    fmt = "JPEG"
-                buf = io.BytesIO()
-                save_kwargs = {"format": fmt, "optimize": True}
-                if fmt in ("JPEG", "WEBP"):
-                    save_kwargs["quality"] = quality
-                img.save(buf, **save_kwargs)
-                return buf.getvalue()
-        except Exception:
-            return data
 
     @staticmethod
     def save(file_obj, user_id: int, category: str) -> str:

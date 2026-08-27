@@ -53,15 +53,6 @@ def ensure_token_cleanup_schedule(apps=None):
     )
 
 
-def remove_token_cleanup_schedule(apps=None):
-    _, _, periodic_task = _beat_models(apps)
-    deleted, _details = periodic_task.objects.filter(
-        name=TOKEN_CLEANUP_TASK_NAME,
-        task=TOKEN_CLEANUP_TASK_PATH,
-    ).delete()
-    return deleted
-
-
 def ensure_account_purge_schedule(apps=None):
     """Cria ou atualiza o beat da limpeza de contas agendadas.
 
@@ -82,12 +73,3 @@ def ensure_account_purge_schedule(apps=None):
             ),
         },
     )
-
-
-def remove_account_purge_schedule(apps=None):
-    _, _, periodic_task = _beat_models(apps)
-    deleted, _details = periodic_task.objects.filter(
-        name=ACCOUNT_PURGE_TASK_NAME,
-        task=ACCOUNT_PURGE_TASK_PATH,
-    ).delete()
-    return deleted
