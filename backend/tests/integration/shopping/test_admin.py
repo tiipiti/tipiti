@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from config.admin_site import site
 from shopping.models import ListItem, ListMembership, PurchaseEvent, ShoppingList, ShoppingPurchase
 
 
@@ -64,6 +65,35 @@ def test_admin_registers_a_purchase_through_the_list_flow(client):
 
     assert response.status_code == 302
     assert PurchaseEvent.objects.filter(kind=PurchaseEvent.Kind.CREATED).count() == 1
+
+
+@pytest.mark.django_db
+def test_admin_purchase_add_redirects_to_the_list_flow(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    client.force_login(administrator)
+
+    response = client.get(reverse("tipiti_admin:shopping_shoppingpurchase_add"))
+
+    assert response.status_code == 302
+    assert response.url == reverse("tipiti_admin:shopping_shoppinglist_changelist")
+
+
+@pytest.mark.django_db
+def test_every_registered_admin_changelist_loads(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    client.force_login(administrator)
+
+    for model in site._registry:
+        response = client.get(reverse(f"tipiti_admin:{model._meta.app_label}_{model._meta.model_name}_changelist"))
+        assert response.status_code == 200, model._meta.label
+
+
+@pytest.mark.django_db
+def test_admin_dashboard_loads(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    client.force_login(administrator)
+
+    assert client.get(reverse("tipiti_admin:index")).status_code == 200
 
 
 @pytest.mark.django_db

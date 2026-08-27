@@ -129,6 +129,11 @@ class ShoppingPurchaseAdmin(ModelAdmin):
     list_select_related = ("shopping_list", "user", "branch")
     readonly_fields = ("user", "shopping_list", "branch", "purchased_at", "client_operation_id", "voided_at", "voided_by", "void_reason", "created_at", "updated_at")
     change_form_template = "admin/shopping/shoppingpurchase/change_form.html"
+
+    def add_view(self, request, form_url="", extra_context=None):
+        self.message_user(request, "Registre uma compra a partir de uma lista aberta.", messages.INFO)
+        return redirect(reverse("tipiti_admin:shopping_shoppinglist_changelist"))
+
     def get_urls(self):
         return [path("<path:object_id>/void/", self.admin_site.admin_view(self.void), name="shopping_shoppingpurchase_void"), *super().get_urls()]
     def void(self, request, object_id):
