@@ -5,6 +5,8 @@
 - [x] Registrar uma compra completa no admin, com itens obrigatórios e total calculado.
 - [x] Corrigir e estornar a compra legada somente por ações auditáveis.
 - [x] Organizar cadastros e a barra lateral por tarefas, com formulários menos ambíguos.
+- [x] Transferir posse pelo admin e impedir troca manual de owner.
+- [x] Padronizar unidades nos formulários do admin.
 
 ## Implementação
 
@@ -13,3 +15,4 @@
 3. Em `backend/shopping/admin.py` e `backend/templates/admin/shopping/purchase/`, bloquear a edição direta de `Purchase`, mostrar seu histórico como inline somente leitura e implementar as telas explícitas de corrigir e estornar usando `correct_purchase()` e `void_purchase()`.
 4. Em `backend/shopping/admin.py` e `backend/config/settings.py`, aplicar `fieldsets`, defaults e rótulos de contexto aos cadastros de listas, preços, promoções e mercados; alterar a sidebar para “Planejar”, “Registrar” e “Acompanhar”.
 5. Atualizar `AGENTS.md` com o fluxo administrativo de compras, rodar os testes de integração, a suíte completa, `compileall`, `manage.py check` e `git diff --check`.
+6. Em `backend/tests/integration/shopping/test_purchase_views.py`, criar testes que fazem POST da transferência de posse pelo admin e rejeitam uma unidade fora do catálogo no formulário de item. Confirmar as falhas, então adicionar a tela de transferência que chama `transfer_ownership()` e os choices apenas nos formulários administrativos.

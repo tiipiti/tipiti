@@ -1,0 +1,8 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if original and not original.archived_at %}
+    <li><a href="{{ transfer_ownership_url }}">Transferir posse</a></li>
+  {% endif %}
+{% endblock %}

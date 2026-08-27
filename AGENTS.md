@@ -20,6 +20,7 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 - Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
 - Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.
 - No admin, `ShoppingPurchase` é registrada uma única vez com itens inline; `Purchase` legada só é corrigida ou estornada pelas telas auditáveis que chamam `shopping.services`.
+- A posse de uma lista é transferida pelo fluxo administrativo que chama `shopping.services.transfer_ownership`; novos membros criados no admin sempre entram como `MEMBER`.
 - Ao criar uma `ShoppingList` no admin, o administrador criador recebe automaticamente o papel `OWNER`.
 - Compras de item registradas, corrigidas ou estornadas preservam eventos append-only em `PurchaseChange`; transferências de posse ficam em `ListOwnershipChange`.
 - O dashboard administrativo prioriza uma fila de atenção antes das métricas de contexto.

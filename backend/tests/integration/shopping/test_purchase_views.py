@@ -200,6 +200,72 @@ class PurchaseViewSetIntegrationTests(APITestCase):
         self.assertEqual(PriceObservation.objects.get().created_by, user)
         self.assertEqual(Promotion.objects.get().created_by, user)
 
+    def test_admin_transfers_list_ownership_through_the_service(self):
+        owner = User.objects.create_superuser(username="owner", password="password")
+        member = User.objects.create_user(username="member", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        ListMembership.objects.create(
+            shopping_list=shopping_list,
+            user=owner,
+            role=ListMembership.Role.OWNER,
+        )
+        membership = ListMembership.objects.create(
+            shopping_list=shopping_list,
+            user=member,
+            role=ListMembership.Role.MEMBER,
+        )
+        self.client.force_login(owner)
+
+        response = self.client.post(
+            f"/admin/shopping/shoppinglist/{shopping_list.pk}/transfer-ownership/",
+            {"member": membership.pk},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            ListMembership.objects.get(pk=membership.pk).role,
+            ListMembership.Role.OWNER,
+        )
+        self.assertEqual(
+            ListMembership.objects.get(shopping_list=shopping_list, user=owner).role,
+            ListMembership.Role.MEMBER,
+        )
+        self.assertTrue(
+            ListOwnershipChange.objects.filter(shopping_list=shopping_list).exists()
+        )
+
+    def test_admin_adds_members_without_allowing_another_owner(self):
+        admin_user = User.objects.create_superuser(
+            username="admin", password="password"
+        )
+        member = User.objects.create_user(username="member", password="password")
+        shopping_list = ShoppingList.objects.create(name="Feira")
+        self.client.force_login(admin_user)
+
+        response = self.client.post(
+            "/admin/shopping/listmembership/add/",
+            {
+                "shopping_list": shopping_list.pk,
+                "user": member.pk,
+                "role": ListMembership.Role.OWNER,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            ListMembership.objects.get(shopping_list=shopping_list, user=member).role,
+            ListMembership.Role.MEMBER,
+        )
+
+    def test_admin_offers_standard_item_units(self):
+        user = User.objects.create_superuser(username="admin", password="password")
+        self.client.force_login(user)
+
+        response = self.client.get("/admin/shopping/listitem/add/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Quilograma")
+
     def test_domain_models_are_registered_in_the_admin(self):
         self.assertTrue(admin_site.is_registered(FavoriteMarket))
         self.assertTrue(admin_site.is_registered(ConsentHistory))

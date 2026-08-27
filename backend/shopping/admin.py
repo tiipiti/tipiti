@@ -39,7 +39,48 @@ from .models import (
     StoreItem,
     SyncOperation,
 )
-from .services import correct_purchase, void_purchase
+from .services import correct_purchase, transfer_ownership, void_purchase
+
+UNIT_CHOICES = (
+    ("un", "Unidade"),
+    ("kg", "Quilograma"),
+    ("g", "Grama"),
+    ("L", "Litro"),
+    ("ml", "Mililitro"),
+)
+
+
+class UnitChoicesAdminMixin:
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "unit":
+            return forms.ChoiceField(
+                choices=UNIT_CHOICES,
+                required=not db_field.blank,
+                label=db_field.verbose_name.capitalize(),
+            )
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+class OwnershipTransferForm(forms.Form):
+    member = forms.ModelChoiceField(
+        queryset=ListMembership.objects.none(), label="Novo dono"
+    )
+
+    def __init__(self, *args, shopping_list, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["member"].queryset = shopping_list.memberships.select_related(
+            "user"
+        ).exclude(role=ListMembership.Role.OWNER)
+
+
+class ListMembershipInlineFormSet(BaseInlineFormSet):
+    def save_new(self, form, commit=True):
+        membership = super().save_new(form, commit=False)
+        membership.role = ListMembership.Role.MEMBER
+        if commit:
+            membership.save()
+            form.save_m2m()
+        return membership
 
 
 class ShoppingPurchaseItemInlineFormSet(BaseInlineFormSet):
@@ -129,9 +170,10 @@ class PurchaseVoidForm(forms.Form):
 
 class ListMembershipInline(TabularInline):
     model = ListMembership
+    formset = ListMembershipInlineFormSet
     extra = 0
     autocomplete_fields = ("user",)
-    readonly_fields = ("public_id", "joined_at", "created_at", "updated_at")
+    readonly_fields = ("public_id", "role", "joined_at", "created_at", "updated_at")
 
 
 class ListItemInline(TabularInline):
@@ -148,6 +190,7 @@ class ShoppingListAdmin(ModelAdmin):
     readonly_fields = ("public_id", "created_at", "updated_at")
     inlines = (ListMembershipInline, ListItemInline)
     actions = ("archive", "restore")
+    change_form_template = "admin/shopping/shoppinglist/change_form.html"
     fieldsets = (
         ("Lista", {"fields": ("name",)}),
         ("Estado", {"fields": ("archived_at",)}),
@@ -177,6 +220,66 @@ class ShoppingListAdmin(ModelAdmin):
     def restore(self, request, queryset):
         queryset.update(archived_at=None)
 
+    def get_urls(self):
+        opts = self.model._meta
+        return [
+            path(
+                "<path:object_id>/transfer-ownership/",
+                self.admin_site.admin_view(self.transfer_ownership_view),
+                name=f"{opts.app_label}_{opts.model_name}_transfer_ownership",
+            ),
+        ] + super().get_urls()
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        shopping_list = self.get_object(request, object_id)
+        if shopping_list is not None:
+            extra_context = {
+                **(extra_context or {}),
+                "transfer_ownership_url": reverse(
+                    f"{self.admin_site.name}:shopping_shoppinglist_transfer_ownership",
+                    args=(shopping_list.pk,),
+                ),
+            }
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def transfer_ownership_view(self, request, object_id):
+        shopping_list = get_object_or_404(self.get_queryset(request), pk=object_id)
+        if request.method == "POST":
+            form = OwnershipTransferForm(request.POST, shopping_list=shopping_list)
+            if form.is_valid():
+                try:
+                    transfer_ownership(
+                        request.user,
+                        shopping_list,
+                        form.cleaned_data["member"].public_id,
+                    )
+                except APIException as error:
+                    form.add_error(None, error.detail)
+                else:
+                    messages.success(
+                        request, "Posse transferida e registrada no histórico."
+                    )
+                    return redirect(self._change_url(shopping_list))
+        else:
+            form = OwnershipTransferForm(shopping_list=shopping_list)
+        return TemplateResponse(
+            request,
+            "admin/shopping/shoppinglist/transfer_ownership.html",
+            {
+                **self.admin_site.each_context(request),
+                "opts": self.model._meta,
+                "original": shopping_list,
+                "form": form,
+                "title": "Transferir posse da lista",
+            },
+        )
+
+    def _change_url(self, shopping_list):
+        return reverse(
+            f"{self.admin_site.name}:shopping_shoppinglist_change",
+            args=(shopping_list.pk,),
+        )
+
 
 @admin.register(ListMembership, site=admin_site)
 class ListMembershipAdmin(ModelAdmin):
@@ -184,11 +287,16 @@ class ListMembershipAdmin(ModelAdmin):
     list_filter = ("role",)
     search_fields = ("shopping_list__name", "user__username", "user__email")
     autocomplete_fields = ("shopping_list", "user")
-    readonly_fields = ("public_id", "joined_at", "created_at", "updated_at")
+    readonly_fields = ("public_id", "role", "joined_at", "created_at", "updated_at")
     list_select_related = ("shopping_list", "user")
 
     def has_delete_permission(self, request, obj=None):
         return obj is None or obj.role != ListMembership.Role.OWNER
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.role = ListMembership.Role.MEMBER
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(ListInvite, site=admin_site)
@@ -211,7 +319,7 @@ class ListInviteAdmin(ModelAdmin):
 
 
 @admin.register(ListItem, site=admin_site)
-class ListItemAdmin(ModelAdmin):
+class ListItemAdmin(UnitChoicesAdminMixin, ModelAdmin):
     list_display = (
         "name",
         "shopping_list",
@@ -223,7 +331,13 @@ class ListItemAdmin(ModelAdmin):
     list_filter = ("is_checked", "unit")
     search_fields = ("name", "shopping_list__name")
     autocomplete_fields = ("shopping_list",)
-    readonly_fields = ("public_id", "checked_at", "created_at", "updated_at")
+    readonly_fields = (
+        "public_id",
+        "checked_at",
+        "purchased_quantity",
+        "created_at",
+        "updated_at",
+    )
     list_select_related = ("shopping_list",)
 
 
@@ -335,7 +449,7 @@ class FavoriteMarketAdmin(ModelAdmin):
 
 
 @admin.register(Product, site=admin_site)
-class ProductAdmin(ModelAdmin):
+class ProductAdmin(UnitChoicesAdminMixin, ModelAdmin):
     list_display = ("name", "brand", "variant", "quantity", "unit", "is_active")
     search_fields = ("name", "brand", "gtin")
     list_filter = ("is_active", "unit")
@@ -427,13 +541,14 @@ class PromotionAdmin(ModelAdmin):
         (
             "Promoção",
             {
+                "description": "Informe uma rede ou uma unidade. Se informar as duas, a unidade deve pertencer à rede.",
                 "fields": (
                     "product",
                     "network",
                     "branch",
                     "regular_price",
                     "promotional_price",
-                )
+                ),
             },
         ),
         ("Vigência e validação", {"fields": ("starts_on", "ends_on", "is_valid")}),
