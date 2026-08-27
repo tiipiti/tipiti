@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db.models import DecimalField, F, Sum
 from django.urls import reverse
 from django.utils import timezone
 from unfold.sites import UnfoldAdminSite
@@ -18,10 +19,15 @@ class TipitiAdminSite(UnfoldAdminSite):
             Report,
             ShoppingList,
             ShoppingPurchase,
+            ShoppingPurchaseItem,
         )
 
         today = timezone.localdate()
         purchases = ShoppingPurchase.objects.filter(purchased_at__date=today)
+        total_expression = Sum(
+            F("items__quantity") * F("items__unit_price"),
+            output_field=DecimalField(max_digits=13, decimal_places=2),
+        )
         now = timezone.now()
         attention_items = []
         report_url = reverse(f"{self.name}:shopping_report_changelist")
@@ -57,9 +63,12 @@ class TipitiAdminSite(UnfoldAdminSite):
         dashboard = {
             "open_lists": ShoppingList.objects.filter(archived_at__isnull=True).count(),
             "today_purchase_count": purchases.count(),
-            "today_total": 0,
+            "today_total": ShoppingPurchaseItem.objects.filter(
+                purchase__in=purchases,
+                purchase__voided_at__isnull=True,
+            ).aggregate(total=Sum(F("quantity") * F("unit_price"), output_field=DecimalField(max_digits=13, decimal_places=2)))["total"] or 0,
             "open_reports": Report.objects.filter(status=Report.Status.OPEN).count(),
-            "recent_purchases": purchases.select_related("user", "branch")[:5],
+            "recent_purchases": purchases.select_related("user", "branch").annotate(total_amount=total_expression)[:5],
             "attention_items": attention_items,
             "today_label": today.strftime("%d/%m"),
             "quick_links": (

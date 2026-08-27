@@ -1,11 +1,15 @@
 {% extends "admin/change_form.html" %}
 
 {% block object-tools-items %}
-  {{ block.super }}
-  {% if register_purchase_url %}
-    <li><a href="{{ register_purchase_url }}">Registrar compra</a></li>
+  {% if change and not original.archived_at %}
+    <li><a class="historylink" href="{% url 'tipiti_admin:shopping_shoppinglist_register_purchase' original.pk %}">Registrar compra</a></li>
   {% endif %}
-  {% if original and not original.archived_at %}
-    <li><a href="{{ transfer_ownership_url }}">Transferir posse</a></li>
+  {{ block.super }}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+  {% if change and not original.archived_at %}
+    <div class="submit-row"><input type="submit" value="Registrar compra" name="_register_purchase"></div>
   {% endif %}
 {% endblock %}

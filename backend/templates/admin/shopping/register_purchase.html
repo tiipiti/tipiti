@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<section class="tipiti-purchase-flow">
+  <a class="tipiti-purchase-flow__back" href="{% url 'tipiti_admin:shopping_shoppinglist_change' shopping_list.pk %}">← Voltar para {{ shopping_list.name }}</a>
+  <h1>{{ title }}</h1>
+  <p class="tipiti-purchase-flow__intro">Selecione apenas os itens efetivamente comprados. O registro gera um evento permanente.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <fieldset class="tipiti-purchase-flow__details">
+      {% for field in form %}
+        <label class="tipiti-purchase-flow__field">{{ field.label_tag }}{{ field }}{{ field.errors }}</label>
+      {% endfor %}
+    </fieldset>
+    {{ formset.management_form }}
+    <section class="tipiti-purchase-flow__items">
+      <h2>Itens da lista</h2>
+      {% for line in formset %}
+        {{ line.non_field_errors }}{{ line.list_item }}
+        <div class="tipiti-purchase-flow__item">
+          <label class="tipiti-purchase-flow__selected">{{ line.selected }}<strong>{{ line.item }}</strong></label>
+          <div>{{ line.quantity.label_tag }}{{ line.quantity }}{{ line.quantity.errors }}</div>
+          <div>{{ line.unit_price.label_tag }}{{ line.unit_price }}{{ line.unit_price.errors }}</div>
+        </div>
+      {% empty %}
+        <p>Esta lista não possui itens para registrar.</p>
+      {% endfor %}
+    </section>
+    <div class="submit-row"><input type="submit" value="Registrar compra"></div>
+  </form>
+</section>
+{% endblock %}
