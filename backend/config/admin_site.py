@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Q, Sum
+from django.db.models import Sum
 from django.urls import reverse
 from django.utils import timezone
 from unfold.sites import UnfoldAdminSite
@@ -15,15 +15,14 @@ class TipitiAdminSite(UnfoldAdminSite):
     def index(self, request, extra_context=None):
         from shopping.models import (
             ListInvite,
-            PurchaseChange,
+            PurchaseEvent,
             Report,
             ShoppingList,
             ShoppingPurchase,
-            StoreItem,
         )
 
         today = timezone.localdate()
-        purchases = ShoppingPurchase.objects.filter(purchased_on=today)
+        purchases = ShoppingPurchase.objects.filter(purchased_at__date=today)
         now = timezone.now()
         attention_items = []
         report_url = reverse(f"{self.name}:shopping_report_changelist")
@@ -46,32 +45,20 @@ class TipitiAdminSite(UnfoldAdminSite):
                 "when": invite.expires_at.strftime("%d/%m às %H:%M"),
                 "url": invite_url,
             })
-        store_item_url = reverse(f"{self.name}:shopping_storeitem_changelist")
-        for store_item in StoreItem.objects.filter(
-            list_item__shopping_list__archived_at__isnull=True,
-        ).filter(
-            Q(price_updated_at__isnull=True) | Q(price_updated_at__lt=now - timedelta(days=7))
-        ).select_related("list_item", "store").order_by("price_updated_at")[:3]:
+        change_url = reverse(f"{self.name}:shopping_purchaseevent_changelist")
+        for change in PurchaseEvent.objects.filter(
+            kind__in=[PurchaseEvent.Kind.CORRECTED, PurchaseEvent.Kind.VOIDED]
+        ).select_related("purchase").order_by("-created_at")[:3]:
             attention_items.append({
-                "title": "Preço de mercado salvo desatualizado",
-                "detail": f"{store_item.list_item} — {store_item.store}",
-                "when": "Sem preço" if store_item.price_updated_at is None else store_item.price_updated_at.strftime("%d/%m"),
-                "url": store_item_url,
-            })
-        change_url = reverse(f"{self.name}:shopping_purchasechange_changelist")
-        for change in PurchaseChange.objects.filter(
-            kind__in=[PurchaseChange.Kind.CORRECTED, PurchaseChange.Kind.VOIDED]
-        ).select_related("purchase__store_item__list_item").order_by("-created_at")[:3]:
-            attention_items.append({
-                "title": "Compra corrigida" if change.kind == PurchaseChange.Kind.CORRECTED else "Compra estornada",
-                "detail": change.purchase.store_item.list_item.name,
+                "title": "Compra corrigida" if change.kind == PurchaseEvent.Kind.CORRECTED else "Compra estornada",
+                "detail": str(change.purchase.public_id),
                 "when": change.created_at.strftime("%d/%m às %H:%M"),
                 "url": change_url,
             })
         dashboard = {
             "open_lists": ShoppingList.objects.filter(archived_at__isnull=True).count(),
             "today_purchase_count": purchases.count(),
-            "today_total": purchases.aggregate(total=Sum("total_amount"))["total"] or 0,
+            "today_total": 0,
             "open_reports": Report.objects.filter(status=Report.Status.OPEN).count(),
             "recent_purchases": purchases.select_related("user", "branch")[:5],
             "attention_items": attention_items,

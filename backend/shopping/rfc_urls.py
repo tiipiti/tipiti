@@ -1,36 +1,23 @@
-from rest_framework.routers import SimpleRouter
 from django.urls import path
-
-from .views import (
-    ComparisonViewSet, FeedViewSet, MarketBranchViewSet, MarketNetworkViewSet,
-    PriceObservationViewSet, ProductViewSet, PromotionViewSet, ReportViewSet,
-    ShareLinkViewSet, ShoppingPurchaseViewSet, SyncViewSet, AdministrationViewSet,
-)
+from rest_framework.routers import SimpleRouter
+from .views import ListInviteAcceptViewSet, ListItemViewSet, MarketBranchViewSet, MarketNetworkViewSet, PriceObservationViewSet, ProductViewSet, PromotionViewSet, ReportViewSet, ShareLinkViewSet, ShoppingListViewSet, ShoppingPurchaseViewSet, SyncViewSet
 
 router = SimpleRouter()
+router.register("lists", ShoppingListViewSet, basename="shopping-list")
 router.register("market-networks", MarketNetworkViewSet, basename="market-network")
 router.register("markets", MarketBranchViewSet, basename="market-branch")
 router.register("products", ProductViewSet, basename="product")
 router.register("prices", PriceObservationViewSet, basename="price")
-router.register("comparisons", ComparisonViewSet, basename="comparison")
 router.register("promotions", PromotionViewSet, basename="promotion")
-router.register("feed", FeedViewSet, basename="feed")
 router.register("purchases", ShoppingPurchaseViewSet, basename="shopping-purchase")
 router.register("sync", SyncViewSet, basename="sync")
 router.register("shares", ShareLinkViewSet, basename="share")
 router.register("reports", ReportViewSet, basename="report")
-
-urlpatterns = router.urls
-admin_reports = AdministrationViewSet.as_view({"get": "reports"})
-admin_resolve_report = AdministrationViewSet.as_view({"post": "resolve_report"})
-admin_merge_markets = AdministrationViewSet.as_view({"post": "merge_markets"})
-admin_merge_products = AdministrationViewSet.as_view({"post": "merge_products"})
-admin_invalidate_contribution = AdministrationViewSet.as_view({"post": "invalidate_contribution"})
-
-urlpatterns += [
-    path("admin/reports/", admin_reports),
-    path("admin/reports/<uuid:report_id>/resolve/", admin_resolve_report),
-    path("admin/markets/merge/", admin_merge_markets),
-    path("admin/products/merge/", admin_merge_products),
-    path("admin/contributions/<uuid:contribution_id>/invalidate/", admin_invalidate_contribution),
+list_items = ListItemViewSet.as_view({"get": "list", "post": "create"})
+list_item = ListItemViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"})
+invite_accept = ListInviteAcceptViewSet.as_view({"post": "create"})
+urlpatterns = router.urls + [
+    path("lists/<uuid:shopping_list_public_id>/items/", list_items),
+    path("lists/<uuid:shopping_list_public_id>/items/<uuid:public_id>/", list_item),
+    path("invites/<str:token>/accept/", invite_accept),
 ]

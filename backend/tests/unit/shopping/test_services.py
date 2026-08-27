@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from shopping.models import ListMembership, SyncOperation
+from shopping.models import SyncOperation
 from shopping.services import (
     apply_sync_operation,
     create_shopping_list,
@@ -34,10 +34,11 @@ def test_membership_for_denies_a_user_without_membership():
             membership_for(MagicMock(), MagicMock())
 
 
-def test_owner_for_denies_a_member():
-    with patch("shopping.services.membership_for", return_value=MagicMock(role="member")):
-        with pytest.raises(PermissionDenied, match="Somente o dono"):
-            owner_for(MagicMock(), MagicMock())
+def test_owner_for_denies_a_non_owner():
+    shopping_list = MagicMock(owner_id=1)
+    user = MagicMock(id=2)
+    with pytest.raises(PermissionDenied, match="Somente o dono"):
+        owner_for(shopping_list, user)
 
 
 def test_ensure_active_rejects_an_archived_list():
@@ -54,10 +55,8 @@ def test_create_shopping_list_creates_the_owner_membership():
     ):
         assert create_shopping_list.__wrapped__(user, name="Feira") is shopping_list
 
-    create_list.assert_called_once_with(name="Feira")
-    create_membership.assert_called_once_with(
-        shopping_list=shopping_list, user=user, role=ListMembership.Role.OWNER
-    )
+    create_list.assert_called_once_with(owner=user, name="Feira")
+    create_membership.assert_called_once_with(shopping_list=shopping_list, user=user)
 
 
 def test_apply_sync_operation_rejects_unknown_entity_without_database():

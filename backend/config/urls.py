@@ -18,7 +18,6 @@ urlpatterns = [
     path("admin/", admin_site.urls),
     path("api/auth/", include("accounts.urls")),
     path("api/notifications/", include("notifications.urls")),
-    path("api/", include("shopping.urls")),
     path("api/v1/", include("shopping.rfc_urls")),
     path("api/media/<path:path>", serve_user_media, name="serve-user-media"),
 ]

@@ -28,7 +28,7 @@ class PromotionFilter(django_filters.FilterSet):
 class ShoppingPurchaseFilter(django_filters.FilterSet):
     market_id = django_filters.UUIDFilter(field_name="branch__public_id")
     list_id = django_filters.UUIDFilter(field_name="shopping_list__public_id")
-    purchased_on = django_filters.DateFromToRangeFilter()
+    purchased_at = django_filters.DateTimeFromToRangeFilter()
 
     class Meta:
         model = ShoppingPurchase

@@ -16,18 +16,15 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 - Modelos públicos do domínio herdam de `core.models.BaseModel` e expõem `public_id` UUID.
 - As APIs usam Django REST Framework; CRUDes existentes usam `core.viewsets.ViewSetBase` e rotas em `urls.py` ou `rfc_urls.py`.
 - Coleções da API usam `core.pagination.FlexiblePageNumberPagination` (Django `Paginator`); filtros públicos declarativos ficam em `shopping/filters.py` com `django-filter`.
-- A API legada está sob `/api/`; os recursos RFC atuais estão sob `/api/v1/`.
+- Os recursos de compras estão somente sob `/api/v1/`; não há API legada de shopping.
 - Serializers validam a entrada HTTP; regras transacionais de lista e compra estão em `shopping/services.py`.
 - Administração usa `config.admin_site.site` e `unfold.admin.ModelAdmin`.
-- O fluxo operacional do admin começa em uma lista: a rota de registrar compra mostra somente itens pendentes daquela lista; mercado é opcional.
-- No admin, `ShoppingPurchase` é registrada uma única vez com itens inline; `Purchase` legada só é corrigida ou estornada pelas telas auditáveis que chamam `shopping.services`.
-- A posse de uma lista é transferida pelo fluxo administrativo que chama `shopping.services.transfer_ownership`; novos membros criados no admin sempre entram como `MEMBER`.
-- Formulários operacionais do admin mostram apenas decisões da tarefa; relações de lista ficam em abas nativas do Unfold e metadados técnicos ficam fora do fluxo de edição.
-- Ao criar uma `ShoppingList` no admin, o administrador criador recebe automaticamente o papel `OWNER`.
-- Compras de item registradas, corrigidas ou estornadas preservam eventos append-only em `PurchaseChange`; transferências de posse ficam em `ListOwnershipChange`.
+- `ShoppingList.owner` é obrigatório; `ListMembership` representa apenas participação e o dono também é sempre participante.
+- Compras canônicas usam `ShoppingPurchase` e linhas imutáveis; totais e saldo comprado são derivados, nunca persistidos.
+- Criação e estorno de compras preservam eventos append-only em `PurchaseEvent`; transferências de posse ficam em `ListOwnershipChange`.
 - O dashboard administrativo prioriza uma fila de atenção antes das métricas de contexto.
 - O profiler opcional `django-sonar` só é ativado fora dos testes com `DJANGO_DEBUG=True` e `DJANGO_SONAR=True`; seu painel fica em `/sonar/`.
-- `shopping` possui a migration inicial `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.
+- `shopping` possui uma única migration fundacional `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.
 - Testes usam pytest: unitários ficam em `backend/tests/unit/` e usam `MagicMock` sem banco; integrações ficam em `backend/tests/integration/` e usam o banco temporário do Django.
 
 ## Ao alterar
