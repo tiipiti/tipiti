@@ -82,8 +82,12 @@ def finalize_purchase(user, shopping_list, data):
 @transaction.atomic
 def void_purchase(user, purchase, *, reason=""):
     purchase = ShoppingPurchase.objects.select_for_update().select_related("shopping_list").get(pk=purchase.pk)
-    membership_for(purchase.shopping_list, user); ensure_active(purchase.shopping_list)
+    if not user.is_staff:
+        membership_for(purchase.shopping_list, user)
+        if purchase.user_id != user.id: raise PermissionDenied("Somente quem registrou a compra pode estorná-la.")
+    ensure_active(purchase.shopping_list)
     if purchase.voided_at: raise ValidationError("Esta compra já foi estornada.")
+    if not reason.strip(): raise ValidationError({"reason": "Informe o motivo do estorno."})
     before = purchase_snapshot(purchase); purchase.voided_at = timezone.now(); purchase.voided_by = user; purchase.void_reason = reason
     purchase.save(update_fields=["voided_at", "voided_by", "void_reason", "updated_at"])
     PurchaseEvent.objects.create(purchase=purchase, changed_by=user, kind=PurchaseEvent.Kind.VOIDED, before=before, after=purchase_snapshot(purchase), reason=reason)

@@ -88,6 +88,10 @@ class Promotion(BaseModel):
     class Meta:
         ordering = ["ends_on", "-created_at"]
         constraints = [models.CheckConstraint(condition=Q(ends_on__gte=models.F("starts_on")), name="promotion_dates_valid"), models.CheckConstraint(condition=Q(promotional_price__lt=models.F("regular_price")), name="promotion_price_lower"), models.CheckConstraint(condition=Q(network__isnull=False) | Q(branch__isnull=False), name="promotion_scope_required")]
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.branch_id and self.network_id and self.branch.network_id != self.network_id:
+            raise ValidationError("A unidade não pertence à rede informada.")
 
 class ShoppingPurchase(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shopping_purchases")
@@ -116,7 +120,6 @@ class ShoppingPurchaseItem(BaseModel):
 class PurchaseEvent(BaseModel):
     class Kind(models.TextChoices):
         CREATED = "created", "Created"
-        CORRECTED = "corrected", "Corrected"
         VOIDED = "voided", "Voided"
     purchase = models.ForeignKey(ShoppingPurchase, on_delete=models.PROTECT, related_name="events")
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="purchase_events")
@@ -158,6 +161,12 @@ class ShareLink(BaseModel):
                 name="share_link_one_target",
             )
         ]
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.location is not None and not isinstance(self.location, dict):
+            raise ValidationError({"location": "Informe um objeto de localização."})
+        if self.location == {}:
+            raise ValidationError({"location": "A localização não pode estar vazia."})
 
 class Report(BaseModel):
     class Status(models.TextChoices): OPEN = "open", "Open"; RESOLVED = "resolved", "Resolved"

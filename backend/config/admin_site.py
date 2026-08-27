@@ -52,10 +52,10 @@ class TipitiAdminSite(UnfoldAdminSite):
             })
         change_url = reverse(f"{self.name}:shopping_purchaseevent_changelist")
         for change in PurchaseEvent.objects.filter(
-            kind__in=[PurchaseEvent.Kind.CORRECTED, PurchaseEvent.Kind.VOIDED]
+            kind=PurchaseEvent.Kind.VOIDED
         ).select_related("purchase").order_by("-created_at")[:3]:
             attention_items.append({
-                "title": "Compra corrigida" if change.kind == PurchaseEvent.Kind.CORRECTED else "Compra estornada",
+                "title": "Compra estornada",
                 "detail": str(change.purchase.public_id),
                 "when": change.created_at.strftime("%d/%m às %H:%M"),
                 "url": change_url,

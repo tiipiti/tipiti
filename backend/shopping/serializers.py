@@ -12,10 +12,22 @@ class ShoppingListSerializer(PublicIdSerializer):
 
 class ListItemSerializer(PublicIdSerializer):
     product_id = serializers.UUIDField(source="product.public_id", read_only=True)
+    product_public_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
     class Meta:
         model = ListItem
-        fields = ["id", "product_id", "name", "quantity", "unit", "completed_at", "version", "created_at", "updated_at"]
+        fields = ["id", "product_id", "product_public_id", "name", "quantity", "unit", "completed_at", "version", "created_at", "updated_at"]
         read_only_fields = ["id", "product_id", "version", "created_at", "updated_at"]
+    def validate_product_public_id(self, value):
+        if value is None: return None
+        product = Product.objects.filter(public_id=value, is_active=True).first()
+        if not product: raise serializers.ValidationError("Produto não encontrado.")
+        return product
+    def create(self, validated_data):
+        product = validated_data.pop("product_public_id", None)
+        return super().create({**validated_data, "product": product})
+    def update(self, instance, validated_data):
+        if "product_public_id" in validated_data: validated_data["product"] = validated_data.pop("product_public_id")
+        return super().update(instance, validated_data)
 
 class MarketNetworkSerializer(PublicIdSerializer):
     class Meta: model = MarketNetwork; fields = ["id", "name", "tax_id", "is_active", "created_at", "updated_at"]; read_only_fields = ["id", "created_at", "updated_at"]
@@ -43,6 +55,11 @@ class PriceObservationSerializer(PublicIdSerializer):
 
 class PromotionSerializer(PublicIdSerializer):
     class Meta: model = Promotion; fields = ["id", "network", "branch", "product", "regular_price", "promotional_price", "starts_on", "ends_on", "is_valid", "created_at"]; read_only_fields = ["id", "created_at", "is_valid"]
+    def validate(self, attrs):
+        values = {field: getattr(self.instance, field) for field in ("network", "branch", "product", "regular_price", "promotional_price", "starts_on", "ends_on")} if self.instance else {}
+        instance = Promotion(**{**values, **attrs})
+        instance.clean()
+        return attrs
 
 class PurchaseItemInputSerializer(serializers.Serializer):
     list_item_id = serializers.UUIDField(); product_id = serializers.UUIDField(required=False); quantity = serializers.DecimalField(max_digits=10, decimal_places=3); unit_price = serializers.DecimalField(max_digits=10, decimal_places=2)
@@ -67,6 +84,7 @@ class ShareLinkSerializer(PublicIdSerializer):
     class Meta: model = ShareLink; fields = ["id", "product", "price", "promotion", "market", "location", "token", "expires_at", "revoked_at"]; read_only_fields = ["id", "token", "revoked_at"]
     def validate(self, attrs):
         if sum(value is not None for key, value in attrs.items() if key in {"product", "price", "promotion", "market", "location"}) != 1: raise serializers.ValidationError("Informe exatamente um recurso.")
+        if "location" in attrs: ShareLink(location=attrs["location"]).clean()
         return attrs
 
 class ReportSerializer(PublicIdSerializer):

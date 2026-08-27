@@ -7,7 +7,7 @@ from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from shopping.models import ListMembership, ListItem, PurchaseEvent, ShareLink, ShoppingList
+from shopping.models import ListMembership, ListItem, PurchaseEvent, ShareLink, ShoppingList, SyncOperation
 
 
 @pytest.mark.django_db
@@ -72,3 +72,32 @@ def test_share_link_requires_exactly_one_target():
 
     with pytest.raises(IntegrityError):
         ShareLink.objects.create(user=user, expires_at=timezone.now())
+
+
+@pytest.mark.django_db
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
+def test_sync_persists_a_version_conflict():
+    user = get_user_model().objects.create_user(username="owner")
+    shopping_list = ShoppingList.objects.create(name="Feira", owner=user)
+    ListMembership.objects.create(shopping_list=shopping_list, user=user)
+    client = APIClient()
+    client.force_authenticate(user)
+
+    response = client.post(
+        "/api/v1/sync/",
+        {
+            "device_id": "ecf0cffa-125b-4d2c-bf0b-37c99f885d74",
+            "operations": [{
+                "client_operation_id": "76ea8f4e-80a4-414c-ac2a-18661136b40a",
+                "entity_type": "shopping_list",
+                "entity_id": str(shopping_list.public_id),
+                "operation_type": "update",
+                "base_version": 2,
+                "payload": {"name": "Outra"},
+            }],
+        },
+        format="json",
+    )
+
+    assert response.data["operations"][0]["status"] == SyncOperation.Status.CONFLICT
+    assert SyncOperation.objects.get().status == SyncOperation.Status.CONFLICT

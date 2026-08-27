@@ -41,20 +41,30 @@ class ListItemViewSet(ViewSetBase):
     def perform_create(self, serializer):
         shopping_list = get_object_or_404(ShoppingList, public_id=self.kwargs["shopping_list_public_id"]); membership_for(shopping_list, self.request.user); ensure_active(shopping_list); serializer.save(shopping_list=shopping_list)
     def perform_update(self, serializer): ensure_active(self.get_object().shopping_list); serializer.save()
+    def perform_destroy(self, instance):
+        ensure_active(instance.shopping_list)
+        instance.delete()
 
-class OwnedModelViewSet(ViewSetBase):
+class StaffWriteViewSet(ViewSetBase):
     permission_classes = [permissions.IsAuthenticated]; lookup_field = "public_id"
-class MarketNetworkViewSet(OwnedModelViewSet): queryset = MarketNetwork.objects.all(); serializer_class = MarketNetworkSerializer
-class MarketBranchViewSet(OwnedModelViewSet): queryset = MarketBranch.objects.select_related("network"); serializer_class = MarketBranchSerializer
-class ProductViewSet(OwnedModelViewSet): queryset = Product.objects.all(); serializer_class = ProductSerializer
-class PriceObservationViewSet(OwnedModelViewSet):
+    def get_permissions(self):
+        permission = permissions.IsAuthenticated if self.action in ("list", "retrieve") else permissions.IsAdminUser
+        return [permission()]
+class MarketNetworkViewSet(StaffWriteViewSet): queryset = MarketNetwork.objects.all(); serializer_class = MarketNetworkSerializer
+class MarketBranchViewSet(StaffWriteViewSet): queryset = MarketBranch.objects.select_related("network"); serializer_class = MarketBranchSerializer
+class ProductViewSet(StaffWriteViewSet): queryset = Product.objects.all(); serializer_class = ProductSerializer
+class PriceObservationViewSet(StaffWriteViewSet):
     queryset = PriceObservation.objects.select_related("product", "branch"); serializer_class = PriceObservationSerializer
+    def get_permissions(self):
+        permission = permissions.IsAuthenticated if self.action in ("list", "retrieve", "create") else permissions.IsAdminUser
+        return [permission()]
     def perform_create(self, serializer): serializer.save(created_by=self.request.user)
-class PromotionViewSet(OwnedModelViewSet):
+class PromotionViewSet(StaffWriteViewSet):
     queryset = Promotion.objects.all(); serializer_class = PromotionSerializer
     def perform_create(self, serializer): serializer.save(created_by=self.request.user)
-class ShoppingPurchaseViewSet(OwnedModelViewSet):
+class ShoppingPurchaseViewSet(StaffWriteViewSet):
     queryset = ShoppingPurchase.objects.select_related("shopping_list", "branch").prefetch_related("items"); serializer_class = ShoppingPurchaseSerializer
+    def get_permissions(self): return [permissions.IsAuthenticated()]
     def get_queryset(self): return self.queryset.filter(user=self.request.user)
     @action(detail=True, methods=["post"])
     def void(self, request, public_id=None): return Response(ShoppingPurchaseSerializer(void_purchase(request.user, self.get_object(), reason=request.data.get("reason", ""))).data)
@@ -64,16 +74,31 @@ class SyncViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = SyncRequestSerializer(data=request.data); serializer.is_valid(raise_exception=True); statuses = []
         for operation in serializer.validated_data["operations"]:
-            record, created = SyncOperation.objects.get_or_create(user=request.user, client_operation_id=operation["client_operation_id"], defaults={**operation, "device_id": serializer.validated_data["device_id"]})
-            statuses.append({"client_operation_id": str(record.client_operation_id), "status": apply_sync_operation(request.user, operation) if created else record.status})
+            record, created = SyncOperation.objects.get_or_create(
+                user=request.user,
+                client_operation_id=operation["client_operation_id"],
+                defaults={
+                    "device_id": serializer.validated_data["device_id"],
+                    "entity_type": operation["entity_type"],
+                    "operation_type": operation["operation_type"],
+                    "base_version": operation["base_version"],
+                },
+            )
+            if created:
+                record.status = apply_sync_operation(request.user, operation)
+                record.save(update_fields=["status"])
+            statuses.append({"client_operation_id": str(record.client_operation_id), "status": record.status})
         return Response({"operations": statuses})
 
-class ShareLinkViewSet(OwnedModelViewSet):
+class ShareLinkViewSet(StaffWriteViewSet):
     queryset = ShareLink.objects.all(); serializer_class = ShareLinkSerializer
+    def get_permissions(self): return [permissions.IsAuthenticated()]
     def get_queryset(self): return self.queryset.filter(user=self.request.user)
     def perform_create(self, serializer): serializer.save(user=self.request.user)
-class ReportViewSet(OwnedModelViewSet):
+class ReportViewSet(StaffWriteViewSet):
     queryset = Report.objects.all(); serializer_class = ReportSerializer
+    def get_permissions(self):
+        return [permissions.IsAuthenticated() if self.action == "create" else permissions.IsAdminUser()]
     def perform_create(self, serializer): serializer.save(reporter=self.request.user)
 class ListInviteAcceptViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]

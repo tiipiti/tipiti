@@ -1,8 +1,9 @@
 import pytest
+from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from shopping.models import ListItem, ListMembership, PurchaseEvent, ShoppingList
+from shopping.models import ListItem, ListMembership, PurchaseEvent, ShoppingList, ShoppingPurchase
 
 
 @pytest.mark.django_db
@@ -83,3 +84,23 @@ def test_admin_purchase_screen_shows_only_the_current_list_items(client):
     assert response.status_code == 200
     assert "Arroz" in response.content.decode()
     assert "Não mostrar" not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_admin_voids_a_purchase_with_an_audit_event(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    owner = get_user_model().objects.create_user(username="owner")
+    shopping_list = ShoppingList.objects.create(name="Feira", owner=owner)
+    ListMembership.objects.create(shopping_list=shopping_list, user=owner)
+    purchase = ShoppingPurchase.objects.create(shopping_list=shopping_list, user=owner, client_operation_id=uuid4())
+    client.force_login(administrator)
+
+    response = client.post(
+        reverse("tipiti_admin:shopping_shoppingpurchase_void", args=(purchase.pk,)),
+        {"reason": "Registro duplicado"},
+    )
+
+    assert response.status_code == 302
+    purchase.refresh_from_db()
+    assert purchase.voided_by == administrator
+    assert PurchaseEvent.objects.filter(purchase=purchase, kind=PurchaseEvent.Kind.VOIDED).exists()

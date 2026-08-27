@@ -13,7 +13,7 @@ from unfold.admin import ModelAdmin, StackedInline, TabularInline
 
 from config.admin_site import site
 from .models import ListInvite, ListItem, ListMembership, ListOwnershipChange, MarketBranch, MarketNetwork, PriceObservation, Product, Promotion, PurchaseEvent, Report, ShareLink, ShoppingList, ShoppingPurchase, ShoppingPurchaseItem, SyncOperation
-from .services import finalize_purchase
+from .services import finalize_purchase, void_purchase
 
 
 class ListItemInline(TabularInline):
@@ -63,6 +63,10 @@ class PurchaseRegistrationForm(forms.Form):
 
 
 PurchaseLineFormSet = formset_factory(PurchaseLineForm, extra=0)
+
+
+class VoidPurchaseForm(forms.Form):
+    reason = forms.CharField(max_length=500, widget=forms.Textarea(attrs={"rows": 3}), label="Motivo do estorno")
 
 
 @admin.register(ShoppingList, site=site)
@@ -124,6 +128,17 @@ class ShoppingPurchaseAdmin(ModelAdmin):
     search_fields = ("shopping_list__name", "user__username")
     list_select_related = ("shopping_list", "user", "branch")
     readonly_fields = ("user", "shopping_list", "branch", "purchased_at", "client_operation_id", "voided_at", "voided_by", "void_reason", "created_at", "updated_at")
+    change_form_template = "admin/shopping/shoppingpurchase/change_form.html"
+    def get_urls(self):
+        return [path("<path:object_id>/void/", self.admin_site.admin_view(self.void), name="shopping_shoppingpurchase_void"), *super().get_urls()]
+    def void(self, request, object_id):
+        purchase = get_object_or_404(self.get_queryset(request), pk=object_id)
+        form = VoidPurchaseForm(request.POST or None)
+        if request.method == "POST" and form.is_valid():
+            void_purchase(request.user, purchase, reason=form.cleaned_data["reason"])
+            self.message_user(request, "Compra estornada.", messages.SUCCESS)
+            return redirect(reverse("tipiti_admin:shopping_shoppingpurchase_change", args=(purchase.pk,)))
+        return render(request, "admin/shopping/void_purchase.html", {"title": "Estornar compra", "purchase": purchase, "form": form, "opts": self.model._meta})
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.method in ("GET", "HEAD")
     def has_delete_permission(self, request, obj=None): return False
