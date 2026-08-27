@@ -4,9 +4,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 
-from shopping.models import ListMembership, ListItem, PurchaseEvent, ShoppingList
+from shopping.models import ListMembership, ListItem, PurchaseEvent, ShareLink, ShoppingList
 
 
 @pytest.mark.django_db
@@ -63,3 +64,11 @@ def test_purchase_flow_creates_an_append_only_event():
     assert result.status_code == 201
     assert str(result.data["total_amount"]) == "12.50000"
     assert PurchaseEvent.objects.filter(kind=PurchaseEvent.Kind.CREATED).count() == 1
+
+
+@pytest.mark.django_db
+def test_share_link_requires_exactly_one_target():
+    user = get_user_model().objects.create_user(username="owner")
+
+    with pytest.raises(IntegrityError):
+        ShareLink.objects.create(user=user, expires_at=timezone.now())

@@ -50,11 +50,6 @@ class MarketBranch(BaseModel):
         super().save(*args, **kwargs)
     def __str__(self): return f"{self.network} — {self.name}"
 
-class FavoriteMarket(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="favorite_markets")
-    branch = models.ForeignKey(MarketBranch, on_delete=models.CASCADE, related_name="favorited_by")
-    class Meta: constraints = [models.UniqueConstraint(fields=["user", "branch"], name="favorite_market_unique")]
-
 class Product(BaseModel):
     gtin = models.CharField(max_length=32, blank=True, unique=True, null=True)
     name = models.CharField(max_length=200)
@@ -69,15 +64,6 @@ class Product(BaseModel):
         self.normalized_name = slugify(self.name)
         super().save(*args, **kwargs)
     def __str__(self): return self.name
-
-class ProductAlias(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="aliases")
-    alias = models.CharField(max_length=200)
-    normalized_alias = models.CharField(max_length=200, editable=False)
-    class Meta: constraints = [models.UniqueConstraint(fields=["product", "normalized_alias"], name="product_alias_unique")]
-    def save(self, *args, **kwargs):
-        self.normalized_alias = slugify(self.alias)
-        super().save(*args, **kwargs)
 
 class PriceObservation(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="price_observations")
@@ -159,6 +145,19 @@ class ShareLink(BaseModel):
     location = models.JSONField(null=True, blank=True)
     token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
     expires_at = models.DateTimeField(); revoked_at = models.DateTimeField(null=True, blank=True)
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(product__isnull=False, price__isnull=True, promotion__isnull=True, market__isnull=True, location__isnull=True)
+                    | Q(product__isnull=True, price__isnull=False, promotion__isnull=True, market__isnull=True, location__isnull=True)
+                    | Q(product__isnull=True, price__isnull=True, promotion__isnull=False, market__isnull=True, location__isnull=True)
+                    | Q(product__isnull=True, price__isnull=True, promotion__isnull=True, market__isnull=False, location__isnull=True)
+                    | Q(product__isnull=True, price__isnull=True, promotion__isnull=True, market__isnull=True, location__isnull=False)
+                ),
+                name="share_link_one_target",
+            )
+        ]
     @property
     def is_active(self): return self.revoked_at is None and self.expires_at > timezone.now()
 
@@ -170,10 +169,8 @@ class Report(BaseModel):
     reason = models.TextField(max_length=1000); status = models.CharField(max_length=12, choices=Status.choices, default=Status.OPEN)
     resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="resolved_reports")
     resolved_at = models.DateTimeField(null=True, blank=True)
-
-class AdministrativeAudit(BaseModel):
-    administrator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="administrative_audits")
-    action = models.CharField(max_length=64); target_type = models.CharField(max_length=32); target_id = models.UUIDField(); details = models.JSONField(default=dict, blank=True)
+    class Meta:
+        constraints = [models.CheckConstraint(condition=Q(price__isnull=False, promotion__isnull=True) | Q(price__isnull=True, promotion__isnull=False), name="report_one_target")]
 
 class ListMembership(BaseModel):
     shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE, related_name="memberships")
