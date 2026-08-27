@@ -1,9 +1,0 @@
-{% extends "admin/base_site.html" %}
-{% block content %}
-<section class="tipiti-purchase-flow">
-  <a class="tipiti-purchase-flow__back" href="{% url 'tipiti_admin:shopping_shoppingpurchase_change' purchase.pk %}">← Voltar para a compra</a>
-  <h1>Estornar compra</h1>
-  <p class="tipiti-purchase-flow__intro">Esta ação preserva o registro e retira seus valores dos totais.</p>
-  <form method="post">{% csrf_token %}{{ form.non_field_errors }}<fieldset class="tipiti-purchase-flow__details"><label class="tipiti-purchase-flow__field">{{ form.reason.label_tag }}{{ form.reason }}{{ form.reason.errors }}</label></fieldset><div class="submit-row"><input type="submit" value="Confirmar estorno"></div></form>
-</section>
-{% endblock %}

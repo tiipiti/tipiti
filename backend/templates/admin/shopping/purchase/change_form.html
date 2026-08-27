@@ -1,9 +1,0 @@
-{% extends "admin/change_form.html" %}
-
-{% block object-tools-items %}
-  {{ block.super }}
-  {% if original and not original.voided_at %}
-    <li><a href="{{ purchase_correct_url }}">Corrigir compra</a></li>
-    <li><a href="{{ purchase_void_url }}" class="text-red-700">Estornar compra</a></li>
-  {% endif %}
-{% endblock %}

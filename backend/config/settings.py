@@ -222,7 +222,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Planejar"),
+                "title": _("Listas"),
                 "items": [
                     {
                         "title": _("Listas e itens"),
@@ -231,56 +231,11 @@ UNFOLD = {
                             "tipiti_admin:shopping_shoppinglist_changelist"
                         ),
                     },
-                    {
-                        "title": _("Compras"),
-                        "icon": "receipt_long",
-                        "link": reverse_lazy(
-                            "tipiti_admin:shopping_shoppingpurchase_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Preços"),
-                        "icon": "sell",
-                        "link": reverse_lazy(
-                            "tipiti_admin:shopping_priceobservation_changelist"
-                        ),
-                    },
-                ],
-            },
-            {
-                "title": _("Registrar"),
-                "items": [
-                    {
-                        "title": _("Registrar compra"),
-                        "icon": "add_shopping_cart",
-                        "link": reverse_lazy(
-                            "tipiti_admin:shopping_shoppingpurchase_add"
-                        ),
-                    },
-                    {
-                        "title": _("Registrar preço"),
-                        "icon": "sell",
-                        "link": reverse_lazy(
-                            "tipiti_admin:shopping_priceobservation_add"
-                        ),
-                    },
                 ],
             },
             {
                 "title": _("Acompanhar"),
                 "items": [
-                    {
-                        "title": _("Compras registradas"),
-                        "icon": "receipt_long",
-                        "link": reverse_lazy(
-                            "tipiti_admin:shopping_shoppingpurchase_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Revisar denúncias"),
-                        "icon": "flag",
-                        "link": reverse_lazy("tipiti_admin:shopping_report_changelist"),
-                    },
                     {
                         "title": _("Notificações"),
                         "icon": "notifications",

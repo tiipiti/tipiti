@@ -1,103 +1,47 @@
-from decimal import Decimal
-
 import pytest
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
 from django.test import override_settings
-from django.utils import timezone
 from rest_framework.test import APIClient
 
-from shopping.models import ListMembership, ListItem, PurchaseEvent, ShareLink, ShoppingList, SyncOperation
+from shopping.models import ListItem, ShoppingList
 
 
 @pytest.mark.django_db
-def test_list_has_an_explicit_owner_and_unique_membership():
-    user = get_user_model().objects.create_user(username="owner")
-    shopping_list = ShoppingList.objects.create(name="Feira", owner=user)
-    ListMembership.objects.create(shopping_list=shopping_list, user=user)
+def test_item_requires_only_free_text_and_incomplete_items_come_first():
+    owner = get_user_model().objects.create_user(username="owner")
+    shopping_list = ShoppingList.objects.create(owner=owner, name="Feira")
+    ListItem.objects.create(shopping_list=shopping_list, name="Já comprei", completed=True)
+    pending = ListItem.objects.create(shopping_list=shopping_list, name="2 caixas de leite")
 
-    with pytest.raises(IntegrityError):
-        ListMembership.objects.create(shopping_list=shopping_list, user=user)
-
-
-@pytest.mark.django_db
-def test_list_item_keeps_manual_completion_separate_from_purchase_balance():
-    user = get_user_model().objects.create_user(username="owner")
-    shopping_list = ShoppingList.objects.create(name="Feira", owner=user)
-
-    item = ListItem.objects.create(
-        shopping_list=shopping_list,
-        name="Arroz",
-        quantity=Decimal("1"),
-        unit="kg",
-    )
-
-    assert item.completed_at is None
-    assert not hasattr(item, "purchased_quantity")
+    assert [item.name for item in shopping_list.items.all()] == ["2 caixas de leite", "Já comprei"]
+    assert pending.completed is False
 
 
 @pytest.mark.django_db
 @override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
-def test_purchase_flow_creates_an_append_only_event():
-    user = get_user_model().objects.create_user(username="owner")
+def test_owner_can_create_and_complete_an_item_without_catalog():
+    owner = get_user_model().objects.create_user(username="owner")
     client = APIClient()
-    client.force_authenticate(user)
+    client.force_authenticate(owner)
+    created_list = client.post("/api/v1/lists/", {"name": "Feira"}, format="json")
+    created_item = client.post(f"/api/v1/lists/{created_list.data['id']}/items/", {"name": "2 caixas de leite"}, format="json")
+    completed = client.patch(f"/api/v1/lists/{created_list.data['id']}/items/{created_item.data['id']}/", {"completed": True}, format="json")
 
-    create_list = client.post("/api/v1/lists/", {"name": "Feira"}, format="json")
-    assert create_list.status_code == 201
-    list_id = create_list.data["id"]
-    create_item = client.post(
-        f"/api/v1/lists/{list_id}/items/",
-        {"name": "Arroz", "quantity": "1", "unit": "kg"},
-        format="json",
-    )
-    assert create_item.status_code == 201
-    result = client.post(
-        f"/api/v1/lists/{list_id}/finalize/",
-        {
-            "client_operation_id": "eb0df3fc-324d-43b3-8610-b5a4eb3c1228",
-            "items": [{"list_item_id": create_item.data["id"], "quantity": "1", "unit_price": "12.50"}],
-        },
-        format="json",
-    )
-
-    assert result.status_code == 201
-    assert str(result.data["total_amount"]) == "12.50000"
-    assert PurchaseEvent.objects.filter(kind=PurchaseEvent.Kind.CREATED).count() == 1
-
-
-@pytest.mark.django_db
-def test_share_link_requires_exactly_one_target():
-    user = get_user_model().objects.create_user(username="owner")
-
-    with pytest.raises(IntegrityError):
-        ShareLink.objects.create(user=user, expires_at=timezone.now())
+    assert created_list.status_code == 201
+    assert created_item.status_code == 201
+    assert completed.status_code == 200
+    assert completed.data["completed"] is True
 
 
 @pytest.mark.django_db
 @override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
-def test_sync_persists_a_version_conflict():
-    user = get_user_model().objects.create_user(username="owner")
-    shopping_list = ShoppingList.objects.create(name="Feira", owner=user)
-    ListMembership.objects.create(shopping_list=shopping_list, user=user)
+def test_other_user_cannot_add_items_to_a_list():
+    owner = get_user_model().objects.create_user(username="owner")
+    other = get_user_model().objects.create_user(username="other")
+    shopping_list = ShoppingList.objects.create(owner=owner, name="Feira")
     client = APIClient()
-    client.force_authenticate(user)
+    client.force_authenticate(other)
 
-    response = client.post(
-        "/api/v1/sync/",
-        {
-            "device_id": "ecf0cffa-125b-4d2c-bf0b-37c99f885d74",
-            "operations": [{
-                "client_operation_id": "76ea8f4e-80a4-414c-ac2a-18661136b40a",
-                "entity_type": "shopping_list",
-                "entity_id": str(shopping_list.public_id),
-                "operation_type": "update",
-                "base_version": 2,
-                "payload": {"name": "Outra"},
-            }],
-        },
-        format="json",
-    )
+    response = client.post(f"/api/v1/lists/{shopping_list.public_id}/items/", {"name": "Não entra"}, format="json")
 
-    assert response.data["operations"][0]["status"] == SyncOperation.Status.CONFLICT
-    assert SyncOperation.objects.get().status == SyncOperation.Status.CONFLICT
+    assert response.status_code == 404
