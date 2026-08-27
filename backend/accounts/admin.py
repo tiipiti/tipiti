@@ -41,7 +41,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin, StackedInline
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from config.admin_site import site as admin_site
+from config.admin_site import DisabledAddRedirectMixin, ReadOnlyAdminMixin, site as admin_site
 
 from .models import (
     ConsentHistory,
@@ -117,7 +117,7 @@ class GroupAdmin(SimpleHistoryAdmin, BaseGroupAdmin, ModelAdmin):
 
 
 @admin.register(ContentType, site=admin_site)
-class ContentTypeAdmin(ModelAdmin):
+class ContentTypeAdmin(ReadOnlyAdminMixin, ModelAdmin):
     list_display = ("app_label", "model")
     list_filter = ("app_label",)
     search_fields = ("app_label", "model")
@@ -125,15 +125,8 @@ class ContentTypeAdmin(ModelAdmin):
     list_per_page = ADMIN_LIST_PER_PAGE
     compressed_fields = True
 
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
 @admin.register(Session, site=admin_site)
-class SessionAdmin(ModelAdmin):
+class SessionAdmin(ReadOnlyAdminMixin, ModelAdmin):
     list_display = ("session_key_short", "expire_date")
     list_filter = ("expire_date",)
     search_fields = ("session_key",)
@@ -145,12 +138,8 @@ class SessionAdmin(ModelAdmin):
     def session_key_short(self, obj):
         return f"{obj.session_key[:12]}..."
 
-    def has_add_permission(self, request):
-        return False
-
-
 @admin.register(GoogleIdentity, site=admin_site)
-class GoogleIdentityAdmin(SimpleHistoryAdmin, ModelAdmin):
+class GoogleIdentityAdmin(ReadOnlyAdminMixin, SimpleHistoryAdmin, ModelAdmin):
     list_display = ("user", "email", "email_verified", "google_sub", "updated_at")
     list_filter = ("email_verified", "created_at", "updated_at")
     search_fields = ("user__username", "user__email", "google_sub", "email")
@@ -169,7 +158,7 @@ class GoogleIdentityAdmin(SimpleHistoryAdmin, ModelAdmin):
 
 
 @admin.register(FacebookIdentity, site=admin_site)
-class FacebookIdentityAdmin(ModelAdmin):
+class FacebookIdentityAdmin(ReadOnlyAdminMixin, ModelAdmin):
     list_display = ("user", "email", "email_verified", "facebook_id", "updated_at")
     list_filter = ("email_verified",)
     search_fields = ("user__username", "user__email", "facebook_id", "email")
@@ -178,7 +167,7 @@ class FacebookIdentityAdmin(ModelAdmin):
 
 
 @admin.register(UserProfile, site=admin_site)
-class UserProfileAdmin(SimpleHistoryAdmin, ModelAdmin):
+class UserProfileAdmin(DisabledAddRedirectMixin, SimpleHistoryAdmin, ModelAdmin):
     list_display = ("user", "nickname", "terms_version", "terms_accepted_at")
     list_filter = ("terms_version", "terms_accepted_at")
     search_fields = ("user__username", "user__email", "nickname")
@@ -195,9 +184,12 @@ class UserProfileAdmin(SimpleHistoryAdmin, ModelAdmin):
             return queryset
         return queryset.filter(user=request.user)
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(ConsentHistory, site=admin_site)
-class ConsentHistoryAdmin(ModelAdmin):
+class ConsentHistoryAdmin(ReadOnlyAdminMixin, ModelAdmin):
     list_display = ("user", "terms_version", "method", "ip_address", "accepted_at")
     list_filter = ("method", "terms_version", "accepted_at")
     search_fields = ("user__username", "user__email", "ip_address", "user_agent")
@@ -211,18 +203,8 @@ class ConsentHistoryAdmin(ModelAdmin):
         "method",
     )
 
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return request.method in ("GET", "HEAD")
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
 @admin.register(UserSession, site=admin_site)
-class UserSessionAdmin(SimpleHistoryAdmin, ModelAdmin):
+class UserSessionAdmin(ReadOnlyAdminMixin, SimpleHistoryAdmin, ModelAdmin):
     list_display = ("user", "session_key", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "user__email", "session_key")
@@ -240,7 +222,7 @@ class UserSessionAdmin(SimpleHistoryAdmin, ModelAdmin):
 
 
 @admin.register(OutstandingToken, site=admin_site)
-class OutstandingTokenAdmin(BaseOutstandingTokenAdmin, ModelAdmin):
+class OutstandingTokenAdmin(ReadOnlyAdminMixin, BaseOutstandingTokenAdmin, ModelAdmin):
     list_per_page = ADMIN_LIST_PER_PAGE
     list_filter = ("created_at", "expires_at")
     search_fields = ("user__username", "user__email", "jti")
@@ -248,7 +230,7 @@ class OutstandingTokenAdmin(BaseOutstandingTokenAdmin, ModelAdmin):
 
 
 @admin.register(BlacklistedToken, site=admin_site)
-class BlacklistedTokenAdmin(BaseBlacklistedTokenAdmin, ModelAdmin):
+class BlacklistedTokenAdmin(ReadOnlyAdminMixin, BaseBlacklistedTokenAdmin, ModelAdmin):
     list_per_page = ADMIN_LIST_PER_PAGE
     list_filter = ("blacklisted_at",)
     search_fields = ("token__user__username", "token__user__email", "token__jti")
@@ -287,14 +269,8 @@ class ClockedScheduleAdmin(BaseClockedScheduleAdmin, ModelAdmin):
 
 
 @admin.register(PeriodicTasks, site=admin_site)
-class PeriodicTasksAdmin(ModelAdmin):
+class PeriodicTasksAdmin(ReadOnlyAdminMixin, ModelAdmin):
     list_display = ("ident", "last_update")
     readonly_fields = ("ident", "last_update")
     list_per_page = ADMIN_LIST_PER_PAGE
     compressed_fields = True
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False

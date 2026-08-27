@@ -11,7 +11,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
 
-from config.admin_site import site
+from config.admin_site import DisabledAddRedirectMixin, ReadOnlyAdminMixin, site
 from .models import ListInvite, ListItem, ListMembership, ListOwnershipChange, MarketBranch, MarketNetwork, PriceObservation, Product, Promotion, PurchaseEvent, Report, ShareLink, ShoppingList, ShoppingPurchase, ShoppingPurchaseItem, SyncOperation
 from .services import finalize_purchase, void_purchase
 
@@ -149,10 +149,8 @@ class ShoppingPurchaseAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None): return False
 
 
-class ReadOnlyAdmin(ModelAdmin):
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return request.method in ("GET", "HEAD")
-    def has_delete_permission(self, request, obj=None): return False
+class ReadOnlyAdmin(ReadOnlyAdminMixin, ModelAdmin):
+    pass
 
 
 site.register(ShoppingPurchaseItem, ReadOnlyAdmin)
@@ -172,10 +170,10 @@ class ProductAdmin(ModelAdmin):
 
 
 @admin.register(Report, site=site)
-class ReportAdmin(ModelAdmin):
+class ReportAdmin(DisabledAddRedirectMixin, ModelAdmin):
     list_display = ("reason", "status", "reporter", "created_at")
     list_filter = ("status",)
-    readonly_fields = ("reporter", "price", "promotion", "reason", "created_at", "updated_at")
+    readonly_fields = ("reporter", "price", "promotion", "reason", "resolved_by", "resolved_at", "created_at", "updated_at")
     fields = ("reporter", "price", "promotion", "reason", "status", "resolved_by", "resolved_at", "created_at", "updated_at")
     def save_model(self, request, obj, form, change):
         if obj.status == Report.Status.RESOLVED and obj.resolved_at is None:
@@ -183,6 +181,24 @@ class ReportAdmin(ModelAdmin):
             obj.resolved_at = timezone.now()
         super().save_model(request, obj, form, change)
 
+    def has_add_permission(self, request):
+        return False
 
-for model in (MarketNetwork, MarketBranch, PriceObservation, Promotion):
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class RecordedByAdmin(ModelAdmin):
+    readonly_fields = ("created_by",)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+for model in (MarketNetwork, MarketBranch):
     site.register(model)
+
+site.register(PriceObservation, RecordedByAdmin)
+site.register(Promotion, RecordedByAdmin)

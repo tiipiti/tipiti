@@ -22,7 +22,8 @@ Este arquivo descreve o código que existe hoje. Atualize-o quando a estrutura o
 - `ShoppingList.owner` é obrigatório; `ListMembership` representa apenas participação e o dono também é sempre participante.
 - Compras canônicas usam `ShoppingPurchase` e linhas imutáveis; totais e saldo comprado são derivados, nunca persistidos.
 - Criação e estorno de compras preservam eventos append-only em `PurchaseEvent`; transferências de posse ficam em `ListOwnershipChange`.
-- O admin cria listas com dono participante, edita itens no contexto da lista e registra ou estorna compras por telas próprias; linhas, eventos, participantes e operações de sync são somente leitura.
+- O admin cria listas com dono participante, edita itens no contexto da lista e registra ou estorna compras por telas próprias; linhas, eventos, participantes e operações de sync são somente leitura. Toda rota `add/` indisponível redireciona ao changelist, nunca devolve 403 em GET.
+- Identidades sociais, sessões, consentimentos e tokens são registros de inspeção; usuário e grupo são os únicos cadastros manuais de `accounts`. Preço e promoção registrados pelo admin recebem o administrador como autor.
 - O dashboard administrativo prioriza uma fila de atenção antes das métricas de contexto.
 - O profiler opcional `django-sonar` só é ativado fora dos testes com `DJANGO_DEBUG=True` e `DJANGO_SONAR=True`; seu painel fica em `/sonar/`.
 - `shopping` possui uma única migration fundacional `0001_initial`; `core` não possui migrations por conter apenas modelos abstratos.

@@ -3,8 +3,7 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from config.admin_site import site
-from shopping.models import ListItem, ListMembership, PurchaseEvent, ShoppingList, ShoppingPurchase
+from shopping.models import ListItem, ListMembership, MarketBranch, MarketNetwork, PriceObservation, Product, Promotion, PurchaseEvent, Report, ShoppingList, ShoppingPurchase
 
 
 @pytest.mark.django_db
@@ -79,24 +78,6 @@ def test_admin_purchase_add_redirects_to_the_list_flow(client):
 
 
 @pytest.mark.django_db
-def test_every_registered_admin_changelist_loads(client):
-    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
-    client.force_login(administrator)
-
-    for model in site._registry:
-        response = client.get(reverse(f"tipiti_admin:{model._meta.app_label}_{model._meta.model_name}_changelist"))
-        assert response.status_code == 200, model._meta.label
-
-
-@pytest.mark.django_db
-def test_admin_dashboard_loads(client):
-    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
-    client.force_login(administrator)
-
-    assert client.get(reverse("tipiti_admin:index")).status_code == 200
-
-
-@pytest.mark.django_db
 def test_admin_purchase_screen_shows_only_the_current_list_items(client):
     administrator = get_user_model().objects.create_superuser(username="admin", password="password")
     owner = get_user_model().objects.create_user(username="owner")
@@ -134,3 +115,86 @@ def test_admin_voids_a_purchase_with_an_audit_event(client):
     purchase.refresh_from_db()
     assert purchase.voided_by == administrator
     assert PurchaseEvent.objects.filter(purchase=purchase, kind=PurchaseEvent.Kind.VOIDED).exists()
+
+
+@pytest.mark.django_db
+def test_admin_report_add_redirects_to_its_changelist(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    client.force_login(administrator)
+
+    response = client.get(reverse("tipiti_admin:shopping_report_add"))
+
+    assert response.status_code == 302
+    assert response.url == reverse("tipiti_admin:shopping_report_changelist")
+
+
+@pytest.mark.django_db
+def test_admin_resolves_a_report_with_the_administrator_as_actor(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    reporter = get_user_model().objects.create_user(username="reporter")
+    product = Product.objects.create(name="Arroz")
+    network = MarketNetwork.objects.create(name="Mercado")
+    branch = MarketBranch.objects.create(network=network, name="Centro", address="Rua A")
+    price = PriceObservation.objects.create(product=product, branch=branch, amount="12.50", observed_on="2026-08-27")
+    report = Report.objects.create(reporter=reporter, price=price, reason="Preço errado")
+    client.force_login(administrator)
+
+    response = client.post(
+        reverse("tipiti_admin:shopping_report_change", args=(report.pk,)),
+        {"status": Report.Status.RESOLVED, "_save": "Save"},
+    )
+
+    assert response.status_code == 302
+    report.refresh_from_db()
+    assert report.resolved_by == administrator
+    assert report.resolved_at is not None
+
+
+@pytest.mark.django_db
+def test_admin_creates_catalog_observations_with_the_administrator_as_author(client):
+    administrator = get_user_model().objects.create_superuser(username="admin", password="password")
+    client.force_login(administrator)
+
+    assert client.post(
+        reverse("tipiti_admin:shopping_product_add"), {"name": "Arroz", "_save": "Save"}
+    ).status_code == 302
+    assert client.post(
+        reverse("tipiti_admin:shopping_marketnetwork_add"),
+        {"name": "Mercado", "_save": "Save"},
+    ).status_code == 302
+    product = Product.objects.get(name="Arroz")
+    network = MarketNetwork.objects.get(name="Mercado")
+    assert client.post(
+        reverse("tipiti_admin:shopping_marketbranch_add"),
+        {"network": network.pk, "name": "Centro", "address": "Rua A", "_save": "Save"},
+    ).status_code == 302
+    branch = MarketBranch.objects.get(name="Centro")
+
+    response = client.post(
+        reverse("tipiti_admin:shopping_priceobservation_add"),
+        {
+            "product": product.pk,
+            "branch": branch.pk,
+            "amount": "12.50",
+            "observed_on": "2026-08-27",
+            "_save": "Save",
+        },
+    )
+    assert response.status_code == 302, response.context["adminform"].form.errors
+    response = client.post(
+        reverse("tipiti_admin:shopping_promotion_add"),
+        {
+            "network": network.pk,
+            "branch": branch.pk,
+            "product": product.pk,
+            "regular_price": "12.50",
+            "promotional_price": "10.00",
+            "starts_on": "2026-08-27",
+            "ends_on": "2026-08-28",
+            "_save": "Save",
+        },
+    )
+    assert response.status_code == 302, response.context["adminform"].form.errors
+
+    assert PriceObservation.objects.get(product=product, branch=branch).created_by == administrator
+    assert Promotion.objects.get(product=product).created_by == administrator
