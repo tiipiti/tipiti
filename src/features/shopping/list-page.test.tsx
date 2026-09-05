@@ -1,8 +1,11 @@
 /* @vitest-environment jsdom */
 
+import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const archiveMutate = vi.fn()
 
 vi.mock('./queries', () => ({
   useList: () => ({ data: { id: 'list-1', name: 'Mercado', is_archived: false }, error: null, isLoading: false, refetch: vi.fn() }),
@@ -14,7 +17,7 @@ vi.mock('./queries', () => ({
   useUpdateItem: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
   useToggleItem: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
   useDeleteItem: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
-  useArchiveList: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
+  useArchiveList: () => ({ mutateAsync: archiveMutate, error: null, isPending: false, reset: vi.fn() }),
   useReopenList: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
 }))
 
@@ -64,18 +67,33 @@ describe('ListPage', () => {
     expect(screen.getByText('PENDENTE')).toBeTruthy()
   })
 
-  it('asks whether to leave items pending when finishing a list with pending items', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('asks whether to leave items pending in a confirmation modal when finishing a list', async () => {
+    archiveMutate.mockReset()
     render(
       <MemoryRouter initialEntries={['/list/list-1']}>
         <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
       </MemoryRouter>,
     )
 
+    // Modal is initially closed
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    // Click finish button opens ConfirmModal
     fireEvent.click(screen.getByRole('button', { name: 'Finalizar compra' }))
-    expect(confirmSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/pendente/i),
-    )
-    confirmSpy.mockRestore()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Finalizar lista com pendência?')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ficou 1 item pendente. Vai ficar pendente\? Deseja finalizar toda a lista\?/),
+    ).toBeInTheDocument()
+
+    // Click cancel button dismisses modal without calling archive
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar para a lista' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(archiveMutate).not.toHaveBeenCalled()
+
+    // Open again and confirm
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar compra' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, finalizar toda a lista' }))
+    await waitFor(() => expect(archiveMutate).toHaveBeenCalledWith('list-1'))
   })
 })

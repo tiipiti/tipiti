@@ -9,6 +9,7 @@ import { ItemRow } from './ItemRow'
 import { PixelCoin } from './PixelIcons'
 import { useArchiveList, useCreateItem, useItems, useList, useReopenList } from './queries'
 import { purchasedTotal } from './total'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 const newItemSchema = z.object({ name: nameSchema })
 type NewItemValues = z.infer<typeof newItemSchema>
@@ -22,6 +23,7 @@ export function ListPage() {
   const archive = useArchiveList()
   const reopen = useReopenList()
   const [retry, setRetry] = useState<(() => void) | null>(null)
+  const [confirmFinishOpen, setConfirmFinishOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const {
     register,
@@ -50,23 +52,17 @@ export function ListPage() {
     }
   }
 
-  const finish = async () => {
-    const pendingCount = (items.data ?? []).filter((item) => !item.is_purchased).length
-    if (pendingCount > 0) {
-      const message =
-        pendingCount === 1
-          ? 'Ficou 1 item pendente. Vai ficar pendente? Deseja finalizar toda a lista?'
-          : `Ficaram ${pendingCount} itens pendentes. Vão ficar pendentes? Deseja finalizar toda a lista?`
-      if (!window.confirm(message)) return
-    } else {
-      if (!window.confirm('Finalizar esta compra?')) return
-    }
+  const finish = () => {
+    setConfirmFinishOpen(true)
+  }
 
+  const onConfirmFinish = async () => {
     try {
       await archive.mutateAsync(id)
+      setConfirmFinishOpen(false)
       navigate('/home')
     } catch {
-      setRetry(() => () => void finish())
+      setRetry(() => () => void onConfirmFinish())
     }
   }
 
@@ -107,6 +103,15 @@ export function ListPage() {
   )
   const total = purchasedTotal(items.data ?? [])
   const readOnly = list.data.is_archived
+  const pendingCount = (items.data ?? []).filter((item) => !item.is_purchased).length
+  const confirmTitle =
+    pendingCount > 0 ? 'Finalizar lista com pendência?' : 'Finalizar esta compra?'
+  const confirmMessage =
+    pendingCount > 0
+      ? pendingCount === 1
+        ? 'Ficou 1 item pendente. Vai ficar pendente? Deseja finalizar toda a lista?'
+        : `Ficaram ${pendingCount} itens pendentes. Vão ficar pendentes? Deseja finalizar toda a lista?`
+      : 'Deseja finalizar esta compra e arquivar a lista?'
 
   return (
     <main className="tipiti-page pb-32">
@@ -227,6 +232,18 @@ export function ListPage() {
           </strong>
         </div>
       </footer>
+
+      <ConfirmModal
+        open={confirmFinishOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        variant={pendingCount > 0 ? 'warning' : 'default'}
+        confirmText={pendingCount > 0 ? 'Sim, finalizar toda a lista' : 'Sim, finalizar'}
+        cancelText="Voltar para a lista"
+        isPending={archive.isPending}
+        onConfirm={() => void onConfirmFinish()}
+        onCancel={() => setConfirmFinishOpen(false)}
+      />
     </main>
   )
 }
