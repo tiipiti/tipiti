@@ -15,3 +15,5 @@ export type Item = {
   price: number
   is_purchased: boolean
 }
+
+export type ArchivedListWithItems = List & { items: Item[] }

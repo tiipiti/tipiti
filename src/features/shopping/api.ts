@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 
-import type { Item, List } from './types'
+import type { ArchivedListWithItems, Item, List } from './types'
 
 const listColumns = 'id, user_id, name, is_archived, created_at, archived_at'
 const itemColumns = 'id, list_id, name, quantity, price, is_purchased'
@@ -34,6 +34,16 @@ export const getArchivedLists = async () => {
     .order('archived_at', { ascending: false })
   throwIfError(error)
   return (data ?? []) as List[]
+}
+
+export const getArchivedListsWithItems = async () => {
+  const { data, error } = await supabase
+    .from('lists')
+    .select(`${listColumns}, items(${itemColumns})`)
+    .eq('is_archived', true)
+    .order('archived_at', { ascending: false })
+  throwIfError(error)
+  return (data ?? []) as ArchivedListWithItems[]
 }
 
 export const getList = async (id: string) => {

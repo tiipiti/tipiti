@@ -1,15 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import * as api from './api'
+import { monthlyConsumption } from './monthly'
 
 export const shoppingKeys = {
   lists: ['lists'] as const,
+  archivedWithItems: ['lists', 'archived-with-items'] as const,
   list: (id: string) => ['list', id] as const,
   items: (id: string) => ['items', id] as const,
 }
 
 export const useActiveLists = () => useQuery({ queryKey: shoppingKeys.lists, queryFn: api.getActiveLists })
 export const useArchivedLists = () => useQuery({ queryKey: [...shoppingKeys.lists, 'archived'], queryFn: api.getArchivedLists })
+export const useMonthlyConsumption = (now = new Date()) => useQuery({
+  queryKey: shoppingKeys.archivedWithItems,
+  queryFn: api.getArchivedListsWithItems,
+  select: (lists) => ({
+    current: monthlyConsumption(lists, now),
+    previous: monthlyConsumption(lists, new Date(now.getFullYear(), now.getMonth() - 1)),
+  }),
+})
 export const useList = (id: string) => useQuery({ queryKey: shoppingKeys.list(id), queryFn: () => api.getList(id) })
 export const useItems = (id: string, enabled = true) => useQuery({ queryKey: shoppingKeys.items(id), queryFn: () => api.getItems(id), enabled })
 
