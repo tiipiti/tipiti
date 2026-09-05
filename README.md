@@ -14,8 +14,9 @@ O `.env` local precisa conter `VITE_SUPABASE_URL` e
 
 ## Configurar Supabase
 
-1. Abra o SQL Editor do projeto Supabase e execute
-   `supabase/migrations/20260905113000_shopping_mvp.sql`.
+1. Abra o SQL Editor do projeto Supabase e execute, nesta ordem:
+   - `supabase/migrations/20260905113000_shopping_mvp.sql`
+   - `supabase/migrations/20260905121500_grant_authenticated_shopping_access.sql`
 2. Em Authentication > URL Configuration, inclua:
    - `http://localhost:5173/auth/callback`
    - `https://SEU-APP.vercel.app/auth/callback`
