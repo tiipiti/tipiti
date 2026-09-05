@@ -16,6 +16,7 @@
 :root {
   --paper: #F4F0EB;
   --ink: #000000;
+  --icon-stroke: #000000;
   --neon-green: #39FF14;
   --electric-yellow: #FFFF00;
   --safety-orange: #FF5F1F;
@@ -298,16 +299,31 @@ a {
 
 /* ==========================================================================
    NEO-BRUTALIST DARK THEME ("FLIPERAMA NOTURNO")
+   Calibrated via Color Theory for Low-Light Ergonomics & Retinal Comfort:
+   - Primary Affirmative (Emerald): #22C55E (replaces blinding #39FF14)
+   - Secondary Attention (Warm Amber/Gold): #E5A93C / #F5C542 (replaces glaring #FFFF00)
+   - Tertiary Irreversible (Arcade Coral): #EA580C (replaces harsh #FF5F1F)
+   - Dark Slate Obsidian Canvas: #121316 (prevents OLED smear & glare)
+   - Elevated Chassis Surface: #1A1B20
+   - Tactile Hard Shadow: #000000 (replaces disruptive inverted white shadows)
+   - Softened Ink Borders: #D8D3CA (bone parchment ink with no halation)
    ========================================================================== */
 
 html.dark {
   color-scheme: dark;
+  --paper: #121316;
+  --ink: #D8D3CA;
+  --icon-stroke: #D8D3CA;
+  --neon-green: #22C55E;
+  --electric-yellow: #E5A93C;
+  --safety-orange: #EA580C;
+  --bought-gray: #282930;
 }
 
 html.dark,
 html.dark body,
 html.dark #root {
-  background-color: #121212 !important;
+  background-color: #121316 !important;
   color: #F4F0EB !important;
 }
 
@@ -322,121 +338,246 @@ html.dark .tipiti-display {
 }
 
 html.dark .tipiti-page {
-  background-color: #121212 !important;
+  background-color: #121316 !important;
   color: #F4F0EB !important;
 }
 
+/* Neutral Panel & Containers */
 html.dark .tipiti-panel {
-  background-color: #1A1A1A !important;
-  border-color: #F4F0EB !important;
+  background-color: #1A1B20 !important;
+  border-color: #D8D3CA !important;
   color: #F4F0EB !important;
 }
 
 html.dark .tipiti-panel-action {
-  box-shadow: 6px 6px 0 #F4F0EB !important;
+  box-shadow: 6px 6px 0 #000000 !important;
 }
 
-html.dark .tipiti-panel-yellow,
-html.dark .tipiti-panel-green,
-html.dark .tipiti-panel-orange {
-  border-color: #F4F0EB !important;
-  color: #000000 !important;
-}
-
-html.dark .tipiti-panel-yellow *,
-html.dark .tipiti-panel-green *,
-html.dark .tipiti-panel-orange * {
-  color: #000000 !important;
-}
-
+/* Attention / Consumption Panel: Deep Obsidian Amber Chassis with Warm Gold Accents */
 html.dark .tipiti-panel-yellow {
-  background-color: #FFFF00 !important;
+  background-color: #231E12 !important;
+  border-color: #E5A93C !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  color: #F4F0EB !important;
+  --icon-stroke: #E5A93C;
+  --electric-yellow: #F5C542;
 }
 
+html.dark .tipiti-panel-yellow h2,
+html.dark .tipiti-panel-yellow p,
+html.dark .tipiti-panel-yellow span,
+html.dark .tipiti-panel-yellow div {
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-panel-yellow .tipiti-pixel {
+  color: #E5A93C !important;
+}
+
+html.dark .tipiti-panel-yellow .tabular-nums {
+  color: #F5C542 !important;
+}
+
+html.dark .tipiti-panel-yellow span.bg-black {
+  background-color: #E5A93C !important;
+  color: #121316 !important;
+}
+
+html.dark .tipiti-panel-yellow .border-t-2 {
+  border-color: #4A3E20 !important;
+}
+
+/* Confirmation / Full Cart Panel: Deep Obsidian Emerald Chassis */
 html.dark .tipiti-panel-green {
-  background-color: #39FF14 !important;
+  background-color: #122218 !important;
+  border-color: #22C55E !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  color: #F4F0EB !important;
+  --icon-stroke: #4ADE80;
 }
 
+html.dark .tipiti-panel-green h2,
+html.dark .tipiti-panel-green p,
+html.dark .tipiti-panel-green span,
+html.dark .tipiti-panel-green div {
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-panel-green .tipiti-pixel {
+  color: #4ADE80 !important;
+}
+
+html.dark .tipiti-panel-green .tabular-nums {
+  color: #4ADE80 !important;
+}
+
+/* Warning / Destructive Panel: Deep Obsidian Coral Chassis */
 html.dark .tipiti-panel-orange {
-  background-color: #FF5F1F !important;
+  background-color: #251612 !important;
+  border-color: #EA580C !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+  color: #F4F0EB !important;
+  --icon-stroke: #F97316;
 }
 
+html.dark .tipiti-panel-orange h2,
+html.dark .tipiti-panel-orange p,
+html.dark .tipiti-panel-orange span,
+html.dark .tipiti-panel-orange div {
+  color: #F4F0EB !important;
+}
+
+/* Standard Buttons */
 html.dark .tipiti-button {
-  background-color: #1E1E1E;
+  background-color: #1E1F24;
   color: #F4F0EB;
-  border-color: #F4F0EB;
-  box-shadow: 4px 4px 0 #F4F0EB;
+  border-color: #D8D3CA;
+  box-shadow: 4px 4px 0 #000000;
 }
 
 html.dark .tipiti-button:hover,
 html.dark .tipiti-button:focus-visible {
-  outline-color: #39FF14;
-  box-shadow: 6px 6px 0 #F4F0EB;
+  outline-color: #22C55E;
+  box-shadow: 6px 6px 0 #000000;
+  transform: translate(-2px, -2px);
 }
 
 html.dark .tipiti-button:active:not(:disabled) {
-  box-shadow: 0 0 0 #F4F0EB;
+  box-shadow: 0 0 0 #000000;
+  transform: translate(4px, 4px);
 }
 
-html.dark .tipiti-button-primary,
-html.dark .tipiti-button-warning,
-html.dark .tipiti-button-yellow {
-  color: #000000 !important;
-  border-color: #F4F0EB !important;
-  box-shadow: 4px 4px 0 #F4F0EB !important;
-}
-
+/* Primary Button: Restful Cyber Emerald */
 html.dark .tipiti-button-primary {
-  background-color: #39FF14 !important;
+  background-color: #22C55E !important;
+  color: #051A0B !important;
+  border-color: #D8D3CA !important;
+  box-shadow: 4px 4px 0 #000000 !important;
 }
 
+html.dark .tipiti-button-primary:hover,
+html.dark .tipiti-button-primary:focus-visible {
+  outline-color: #4ADE80 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+}
+
+html.dark .tipiti-button-primary:active:not(:disabled) {
+  box-shadow: 0 0 0 #000000 !important;
+  transform: translate(4px, 4px);
+}
+
+/* Warning Button: Warm Arcade Coral */
 html.dark .tipiti-button-warning {
-  background-color: #FF5F1F !important;
+  background-color: #EA580C !important;
+  color: #000000 !important;
+  border-color: #D8D3CA !important;
+  box-shadow: 4px 4px 0 #000000 !important;
 }
 
-html.dark .tipiti-button-yellow {
-  background-color: #FFFF00 !important;
+html.dark .tipiti-button-warning:hover,
+html.dark .tipiti-button-warning:focus-visible {
+  outline-color: #F97316 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
 }
 
+html.dark .tipiti-button-warning:active:not(:disabled) {
+  box-shadow: 0 0 0 #000000 !important;
+  transform: translate(4px, 4px);
+}
+
+/* Secondary Button: Elevated Slate Neutral */
 html.dark .tipiti-button-secondary {
-  background-color: #262626 !important;
+  background-color: #262730 !important;
   color: #F4F0EB !important;
-  border-color: #F4F0EB !important;
-  box-shadow: 4px 4px 0 #F4F0EB !important;
+  border-color: #D8D3CA !important;
+  box-shadow: 4px 4px 0 #000000 !important;
 }
 
+html.dark .tipiti-button-secondary:hover,
+html.dark .tipiti-button-secondary:focus-visible {
+  outline-color: #D8D3CA !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+}
+
+html.dark .tipiti-button-secondary:active:not(:disabled) {
+  box-shadow: 0 0 0 #000000 !important;
+  transform: translate(4px, 4px);
+}
+
+/* Yellow Button: Warm Arcade Amber */
+html.dark .tipiti-button-yellow {
+  background-color: #E5A93C !important;
+  color: #121316 !important;
+  border-color: #D8D3CA !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+}
+
+html.dark .tipiti-button-yellow:hover,
+html.dark .tipiti-button-yellow:focus-visible {
+  outline-color: #F5C542 !important;
+  box-shadow: 6px 6px 0 #000000 !important;
+}
+
+html.dark .tipiti-button-yellow:active:not(:disabled) {
+  box-shadow: 0 0 0 #000000 !important;
+  transform: translate(4px, 4px);
+}
+
+/* Small Buttons */
 html.dark .tipiti-button-sm {
-  border-color: #F4F0EB;
-  box-shadow: 3px 3px 0 #F4F0EB;
+  border-color: #D8D3CA;
+  box-shadow: 3px 3px 0 #000000;
 }
 
+html.dark .tipiti-button-sm:hover,
+html.dark .tipiti-button-sm:focus-visible {
+  box-shadow: 4px 4px 0 #000000;
+}
+
+html.dark .tipiti-button-sm:active:not(:disabled) {
+  box-shadow: 0 0 0 #000000;
+  transform: translate(3px, 3px);
+}
+
+/* Inputs & Form Fields */
 html.dark .tipiti-input {
-  background-color: #1A1A1A !important;
+  background-color: #1A1B20 !important;
   color: #F4F0EB !important;
-  border-color: #F4F0EB !important;
+  border-color: #D8D3CA !important;
 }
 
 html.dark .tipiti-input:focus-visible {
-  outline-color: #39FF14 !important;
+  outline-color: #22C55E !important;
 }
 
+/* Tables */
 html.dark .tipiti-table th {
-  color: #F4F0EB !important;
-  border-bottom-color: #F4F0EB !important;
+  color: #D8D3CA !important;
+  border-bottom-color: #D8D3CA !important;
 }
 
 html.dark .tipiti-table td {
-  border-bottom-color: #F4F0EB !important;
+  border-bottom-color: #383944 !important;
 }
 
 html.dark .tipiti-skeleton {
-  border-color: #F4F0EB !important;
-  background-color: #242424 !important;
+  border-color: #D8D3CA !important;
+  background-color: #262730 !important;
+}
+
+/* Fixed Bottom Bar on List View */
+html.dark footer.fixed {
+  background-color: #1A1B20 !important;
+  border-top-color: #D8D3CA !important;
+}
+
+html.dark footer.fixed strong.tabular-nums {
+  color: #4ADE80 !important;
 }
 
 /* Utility overrides in dark mode */
 html.dark .bg-\[\#F4F0EB\] {
-  background-color: #121212 !important;
+  background-color: #121316 !important;
 }
 
 html.dark .text-black {
@@ -444,24 +585,24 @@ html.dark .text-black {
 }
 
 html.dark .border-black {
-  border-color: #F4F0EB !important;
+  border-color: #D8D3CA !important;
 }
 
 html.dark .border-b-black {
-  border-bottom-color: #F4F0EB !important;
+  border-bottom-color: #D8D3CA !important;
 }
 
 html.dark .border-t-black {
-  border-top-color: #F4F0EB !important;
+  border-top-color: #D8D3CA !important;
 }
 
 html.dark .bg-white {
-  background-color: #1E1E1E !important;
+  background-color: #1A1B20 !important;
   color: #F4F0EB !important;
 }
 
 html.dark .bg-\[\#D6D0C8\] {
-  background-color: #242424 !important;
+  background-color: #282930 !important;
 }
 
 html.dark .text-black\/50,
@@ -476,28 +617,65 @@ html.dark .placeholder\:text-black\/50::placeholder {
 }
 
 html.dark .bg-black {
-  background-color: #F4F0EB !important;
-  color: #121212 !important;
+  background-color: #262730 !important;
+  color: #F4F0EB !important;
 }
 
 html.dark .bg-black * {
-  color: #121212 !important;
+  color: #F4F0EB !important;
 }
 
 html.dark .text-\[\#F4F0EB\] {
-  color: #121212 !important;
+  color: #F4F0EB !important;
+}
+
+/* Inline color utilities redirected to ergonomic dark tokens */
+html.dark .bg-\[\#39FF14\] {
+  background-color: #22C55E !important;
+}
+
+html.dark .hover\:bg-\[\#39FF14\]\/20:hover {
+  background-color: rgba(34, 197, 94, 0.25) !important;
+}
+
+html.dark .text-\[\#FF5F1F\] {
+  color: #EA580C !important;
+}
+
+html.dark .bg-\[\#FF5F1F\] {
+  background-color: #EA580C !important;
+}
+
+html.dark .bg-\[\#FFFF00\] {
+  background-color: #E5A93C !important;
 }
 
 /* Charts in dark mode */
 html.dark .recharts-cartesian-grid line {
-  stroke: #333333 !important;
+  stroke: #2E303B !important;
 }
 
 html.dark .recharts-text {
-  fill: #F4F0EB !important;
+  fill: #DDD7CE !important;
 }
 
 html.dark .recharts-cartesian-axis-line,
 html.dark .recharts-cartesian-axis-tick-line {
-  stroke: #F4F0EB !important;
+  stroke: #454754 !important;
+}
+
+html.dark [data-chart] {
+  --color-total: #E5A93C !important;
+}
+
+html.dark .recharts-bar-rectangle path {
+  fill: #E5A93C !important;
+  stroke: #121316 !important;
+}
+
+html.dark [data-slot="chart-tooltip"] {
+  background-color: #1A1B20 !important;
+  border-color: #D8D3CA !important;
+  color: #F4F0EB !important;
+  box-shadow: 4px 4px 0 #000000 !important;
 }

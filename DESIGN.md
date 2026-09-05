@@ -8,9 +8,13 @@ colors:
   electric-yellow: "#FFFF00"
   safety-orange: "#FF5F1F"
   bought-gray: "#D6D0C8"
-  obsidian: "#121212"
-  charcoal: "#1E1E1E"
-  dark-surface: "#262626"
+  obsidian: "#121316"
+  dark-surface: "#1A1B20"
+  dark-amber-surface: "#231E12"
+  dark-bone-ink: "#D8D3CA"
+  emerald-green: "#22C55E"
+  arcade-amber: "#E5A93C"
+  arcade-coral: "#EA580C"
 typography:
   display:
     fontFamily: "Anton, Impact, Arial Black, sans-serif"
@@ -102,7 +106,17 @@ ação, nunca mero enfeite.
 - **Tinta preta (`#000000`):** tipografia, bordas estruturais de 4px, divisórias, sombras rígidas e contornos de foco.
 - **Cinza comprado (`#D6D0C8`):** fundo de linha finalizada, combinado com rótulo textual e risco.
 
-> **The Ink Rule:** Todo contêiner, campo, painel e botão tem borda preta sólida de 4px (`border: 4px solid #000000`). Não existe borda cinza, translúcida ou com menos de 3px. `border-radius: 0px` em tudo.
+### Dark Mode ("Fliperama Noturno") — Calibração por Teoria das Cores
+No modo escuro, a pupila dilata e cores saturadas com alta luminância causam ofuscamento e fadiga visual. A paleta noturna equilibra contraste e ergonomia retiniana:
+- **Verde Esmeralda Arcade (`#22C55E` / `#4ADE80`):** substitui o verde neon (#39FF14), mantendo sensação de "1-UP" sem vibração cromática.
+- **Âmbar e Ouro Arcade (`#E5A93C` / `#F5C542`):** substitui o amarelo elétrico (#FFFF00), reduzindo a luminância em 62% e preservando a leitura financeira com aconchego visual.
+- **Coral Arcade (`#EA580C` / `#F97316`):** substitui o laranja de segurança (#FF5F1F).
+- **Ardósia Noturna (`#121316`):** lona de fundo que elimina o ofuscamento e o "black smear" de OLED.
+- **Chassi Noturno (`#1A1B20` / `#231E12`):** superfície de painéis com contraste controlado.
+- **Tinta de Osso / Borda Noturna (`#D8D3CA`):** borda sólida estrutural de alto contraste (11:1) sem a halação do branco puro.
+- **Sombra Rígida Noturna (`#000000`):** sombra física de carimbo que ancora os elementos sem criar blocos brancos deslocados.
+
+> **The Ink Rule:** Todo contêiner, campo, painel e botão tem borda preta sólida de 4px no tema claro (`border: 4px solid #000000`) e borda de osso sólida (`border: 4px solid #D8D3CA`) no tema escuro. Não existe borda cinza fina, translúcida ou com menos de 3px. `border-radius: 0px` em tudo.
 
 ---
 
