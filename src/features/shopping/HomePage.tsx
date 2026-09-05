@@ -108,7 +108,7 @@ export function HomePage() {
     <main className="tipiti-page">
       <header className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-black">
+          <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">
             {displayName ? `Bem-vindo, ${displayName}` : 'Tipiti'}
           </p>
           <h1 className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
@@ -129,7 +129,7 @@ export function HomePage() {
               type="button"
               onClick={() => setCreating(true)}
             >
-              Nova lista
+              + Nova lista
             </button>
           ) : null}
         </div>
@@ -149,7 +149,7 @@ export function HomePage() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+                  <h2 className="tipiti-pixel text-xs font-bold uppercase tracking-wider text-black">
                     Consumo do mês
                   </h2>
                   <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#F4F0EB]">

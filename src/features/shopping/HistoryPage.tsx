@@ -10,7 +10,7 @@ export function HistoryPage() {
     <main className="tipiti-page">
       <header className="flex items-center justify-between border-b-4 border-black pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+          <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">Tipiti</p>
           <h1 className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl uppercase tracking-tight text-black">
             Histórico
           </h1>

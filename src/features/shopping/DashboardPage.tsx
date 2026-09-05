@@ -8,7 +8,7 @@ export function DashboardPage() {
       <header className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+            <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">Tipiti</p>
             <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#F4F0EB]">
               Dashboard
             </span>

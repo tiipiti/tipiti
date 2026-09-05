@@ -16,7 +16,7 @@ export function AuthLoading() {
       className="grid min-h-[100dvh] place-items-center bg-[#F4F0EB] p-5 text-black"
     >
       <section className="tipiti-panel tipiti-panel-action w-full max-w-sm text-center">
-        <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+        <p className="tipiti-pixel text-base font-bold uppercase tracking-wider text-black">Tipiti</p>
         <p className="mt-3 text-sm font-bold uppercase text-black" role="status">
           Preparando sua lista...
         </p>

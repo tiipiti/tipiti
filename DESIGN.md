@@ -103,11 +103,12 @@ ação, nunca mero enfeite.
 
 ## Typography
 
-- **Display Font:** `Impact, Arial Black, sans-serif`
-- **Body Font:** `Courier New, monospace`
-- **Label/Mono Font:** `Courier New, monospace`
+- **Display Font:** `Anton, Impact, Arial Black, sans-serif`
+- **Arcade / Brand Font:** `Pixelify Sans, monospace` (usada exclusivamente no logo `Tipiti`, badges e carimbo `COMPRADO`)
+- **Body Font:** `Courier Prime, Courier New, monospace`
+- **Label/Mono Font:** `Courier Prime, Courier New, monospace`
 
-**Character:** Títulos e dinheiro gritam como cabeçalhos de encarte promocional de mercado; produtos, quantidades, status e datas parecem saída de cupom fiscal em terminal. Somente títulos principais e totais financeiros usam a fonte display pesada.
+**Character:** Títulos e dinheiro gritam como cabeçalhos de encarte promocional de mercado; o logo e selos de status invocam o fliperama retrô com `Pixelify Sans`; produtos, quantidades, status e datas mantêm clareza absoluta de cupom fiscal com monoespaçada.
 
 ### Hierarchy
 - **Display** (900, 32px, 0.95): títulos de página e totais mensais/da lista. Sempre em caixa alta.

@@ -10,6 +10,7 @@
 
   --font-display: 'Anton', Impact, "Arial Black", sans-serif;
   --font-mono: 'Courier Prime', "Courier New", Courier, monospace;
+  --font-pixel: 'Pixelify Sans', cursive, monospace;
 }
 
 :root {
@@ -45,6 +46,12 @@ h6,
   line-height: 1;
   text-transform: uppercase;
   color: #000000;
+}
+
+/* Pixel arcade font for branding, badges and game stamps */
+.tipiti-pixel {
+  font-family: 'Pixelify Sans', cursive, monospace !important;
+  letter-spacing: 0.05em;
 }
 
 /* Base text elements default to monospace receipt style */

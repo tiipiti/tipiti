@@ -163,7 +163,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
     <main className="tipiti-page flex min-h-[100dvh] flex-col justify-center">
       <section className="tipiti-panel tipiti-panel-action">
         <div className="flex items-center justify-between border-b-2 border-black pb-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+          <p className="tipiti-pixel text-base font-bold uppercase tracking-wider text-black">Tipiti</p>
           <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-[#F4F0EB] px-2 py-0.5">
             Acesso
           </span>

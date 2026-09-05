@@ -51,7 +51,7 @@ export function ConfirmModal({
     >
       <div className="tipiti-panel tipiti-panel-action w-full max-w-sm animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between border-b-2 border-black pb-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+          <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">Tipiti</p>
           <span
             className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
               variant === 'warning'

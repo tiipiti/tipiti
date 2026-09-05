@@ -101,7 +101,9 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                 aria-hidden="true"
               />
             )}
-            <span>{item.is_purchased ? 'COMPRADO' : 'PENDENTE'}</span>
+            <span className="tipiti-pixel text-xs tracking-wider">
+              {item.is_purchased ? 'COMPRADO' : 'PENDENTE'}
+            </span>
           </button>
         </td>
       </tr>

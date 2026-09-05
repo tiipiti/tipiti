@@ -44,6 +44,11 @@ Ao criar ou editar qualquer componente de interface, siga rigorosamente as diret
 - **NUNCA use** `window.confirm()` ou `window.alert()`.
 - **SEMPRE use** o componente [`ConfirmModal`](file:///home/smovisk/PycharmProjects/tipiti/src/components/ConfirmModal.tsx) estilizado em neo-brutalismo para confirmar ações críticas ou destrutivas.
 
+### 2.6. Tipografia e Fontes
+- **Brand / Arcade Stamp:** `Pixelify Sans` (classe `.tipiti-pixel`) usada exclusivamente para o logo `Tipiti`, títulos de destaque arcade e carimbo de status `COMPRADO`.
+- **Display de Encarte:** `Anton` / `Impact` / `Arial Black` (`.tipiti-display`) para manchetes e totais.
+- **Corpo e Dados (The Receipt Rule):** `Courier Prime` / `Courier New` para tabela de itens, formulários e preços. **NUNCA** aplique fonte pixelada nos campos de texto ou nomes de produto.
+
 ---
 
 ## 3. Stack Tecnológica & Arquitetura
