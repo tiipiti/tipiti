@@ -22,6 +22,9 @@ export function HistoryPage() {
           <Link className="tipiti-button py-2 text-xs" to="/home">
             Listas ativas
           </Link>
+          <Link className="tipiti-button py-2 text-xs" to="/profile">
+            Perfil
+          </Link>
         </div>
       </header>
 

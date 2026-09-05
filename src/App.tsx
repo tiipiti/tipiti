@@ -9,6 +9,7 @@ import { HistoryPage } from '@/features/shopping/HistoryPage'
 import { HomePage } from '@/features/shopping/HomePage'
 import { ListPage } from '@/features/shopping/ListPage'
 import { DashboardPage } from '@/features/shopping/DashboardPage'
+import { ProfilePage } from '@/features/auth/ProfilePage'
 
 function PrivatePage({ children }: { children: ReactNode }) {
   const { loading, session } = useSession()
@@ -26,6 +27,7 @@ function App() {
       <Route path="/history" element={<PrivatePage><HistoryPage /></PrivatePage>} />
       <Route path="/dashboard" element={<PrivatePage><DashboardPage /></PrivatePage>} />
       <Route path="/list/:id" element={<PrivatePage><ListPage /></PrivatePage>} />
+      <Route path="/profile" element={<PrivatePage><ProfilePage /></PrivatePage>} />
       <Route path="*" element={<Navigate replace to="/login" />} />
     </Routes>
   )

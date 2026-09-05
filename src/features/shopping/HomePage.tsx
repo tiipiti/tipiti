@@ -122,6 +122,9 @@ export function HomePage() {
           <Link to="/history" className="tipiti-button py-2 text-xs">
             Histórico
           </Link>
+          <Link to="/profile" className="tipiti-button py-2 text-xs" aria-label="Meu Perfil">
+            Perfil
+          </Link>
           {active.data?.length ? (
             <button
               className="tipiti-button tipiti-button-primary py-2 text-xs"

@@ -18,6 +18,9 @@ export function DashboardPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/profile" className="tipiti-button py-2 text-xs">
+            Perfil
+          </Link>
           <Link to="/home" className="tipiti-button py-2 text-xs">
             ← Início
           </Link>

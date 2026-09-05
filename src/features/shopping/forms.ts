@@ -73,6 +73,24 @@ export const signupSchema = z.object({
   password: strongPasswordSchema,
 })
 
+export const updateProfileSchema = z.object({
+  preferred_name: z
+    .string()
+    .trim()
+    .min(1, 'Informe como deseja ser chamado')
+    .max(50, 'Máximo de 50 caracteres'),
+})
+
+export const updatePasswordSchema = z
+  .object({
+    password: strongPasswordSchema,
+    confirm_password: z.string().min(1, 'Confirme a nova senha'),
+  })
+  .refine((data) => data.password === data.confirm_password, {
+    message: 'As senhas não coincidem',
+    path: ['confirm_password'],
+  })
+
 export const itemSchema = z.object({
   quantity: z.preprocess(
     parseDecimal,
