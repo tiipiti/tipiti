@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { ListSummary } from './ListSummary'
 import { useArchivedLists } from './queries'
+import { AppFooter } from '@/components/AppFooter'
 
 export function HistoryPage() {
   const history = useArchivedLists()
@@ -61,6 +62,8 @@ export function HistoryPage() {
           ))}
         </section>
       ) : null}
+
+      <AppFooter />
     </main>
   )
 }

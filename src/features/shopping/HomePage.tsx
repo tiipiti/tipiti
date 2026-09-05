@@ -10,6 +10,7 @@ import { formatCurrency, nameSchema } from './forms'
 import { ListSummary } from './ListSummary'
 import { monthDifference } from './monthly'
 import { PixelCart, PixelCoin } from './PixelIcons'
+import { AppFooter } from '@/components/AppFooter'
 import {
   useActiveLists,
   useArchivedLists,
@@ -259,6 +260,8 @@ export function HomePage() {
           </button>
         </div>
       ) : null}
+
+      <AppFooter />
     </main>
   )
 }

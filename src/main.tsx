@@ -7,6 +7,7 @@ import '@fontsource/pixelify-sans/700.css'
 import './index.css'
 import App from './App.tsx'
 import { SessionProvider } from './features/auth/session.tsx'
+import { ThemeProvider } from './lib/theme.tsx'
 
 const queryClient = new QueryClient()
 
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SessionProvider>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </SessionProvider>
       </BrowserRouter>
     </QueryClientProvider>

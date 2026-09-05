@@ -10,6 +10,7 @@ import { PixelCoin } from './PixelIcons'
 import { useArchiveList, useCreateItem, useItems, useList, useReopenList, useUncheckAllItems } from './queries'
 import { purchasedTotal } from './total'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { ThemeToggle } from '@/lib/theme'
 
 const newItemSchema = z.object({ name: nameSchema })
 type NewItemValues = z.infer<typeof newItemSchema>
@@ -309,16 +310,19 @@ export function ListPage() {
         aria-live="polite"
         aria-atomic="true"
       >
-        <div className="mx-auto flex max-w-xl items-center justify-between">
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <PixelCoin width={24} height={24} />
             <span className="text-xs font-bold uppercase tracking-wider text-black">
               No carrinho
             </span>
           </div>
-          <strong className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black text-black tabular-nums">
-            {formatCurrency(total)}
-          </strong>
+          <div className="flex items-center gap-3">
+            <strong className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black text-black tabular-nums">
+              {formatCurrency(total)}
+            </strong>
+            <ThemeToggle compact />
+          </div>
         </div>
       </footer>
 

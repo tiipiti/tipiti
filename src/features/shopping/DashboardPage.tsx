@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { DashboardSection } from './DashboardSection'
+import { AppFooter } from '@/components/AppFooter'
 
 export function DashboardPage() {
   const [monthsRange, setMonthsRange] = useState<6 | 12>(6)
@@ -53,6 +54,7 @@ export function DashboardPage() {
       </header>
 
       <DashboardSection monthsRange={monthsRange} />
+      <AppFooter />
     </main>
   )
 }

@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from './session'
 import { getUserDisplayName } from './user'
 import { updatePasswordSchema, updateProfileSchema } from '../shopping/forms'
+import { AppFooter } from '@/components/AppFooter'
 
 type ProfileValues = z.infer<typeof updateProfileSchema>
 type PasswordValues = z.infer<typeof updatePasswordSchema>
@@ -330,6 +331,8 @@ export function ProfilePage() {
           </div>
         </section>
       </div>
+
+      <AppFooter />
 
       {/* Modal Neo-brutalista de Confirmação de Logout */}
       <ConfirmModal

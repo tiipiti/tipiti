@@ -295,3 +295,224 @@ a {
     transform: none !important;
   }
 }
+
+/* ==========================================================================
+   NEO-BRUTALIST DARK THEME ("FLIPERAMA NOTURNO")
+   ========================================================================== */
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #121212 !important;
+  color: #F4F0EB !important;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark .tipiti-display {
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-page {
+  background-color: #121212 !important;
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-panel {
+  background-color: #1A1A1A !important;
+  border-color: #F4F0EB !important;
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-panel-action {
+  box-shadow: 6px 6px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-panel-yellow {
+  background-color: #FFFF00 !important;
+  border-color: #F4F0EB !important;
+  color: #000000 !important;
+}
+
+html.dark .tipiti-panel-yellow *,
+html.dark .tipiti-panel-yellow h1,
+html.dark .tipiti-panel-yellow h2,
+html.dark .tipiti-panel-yellow strong {
+  color: #000000 !important;
+}
+
+html.dark .tipiti-panel-green {
+  background-color: #39FF14 !important;
+  border-color: #F4F0EB !important;
+  color: #000000 !important;
+}
+
+html.dark .tipiti-panel-green *,
+html.dark .tipiti-panel-green h1,
+html.dark .tipiti-panel-green h2,
+html.dark .tipiti-panel-green strong {
+  color: #000000 !important;
+}
+
+html.dark .tipiti-panel-orange {
+  background-color: #FF5F1F !important;
+  border-color: #F4F0EB !important;
+  color: #000000 !important;
+}
+
+html.dark .tipiti-panel-orange *,
+html.dark .tipiti-panel-orange h1,
+html.dark .tipiti-panel-orange h2,
+html.dark .tipiti-panel-orange strong {
+  color: #000000 !important;
+}
+
+html.dark .tipiti-button {
+  background-color: #1E1E1E;
+  color: #F4F0EB;
+  border-color: #F4F0EB;
+  box-shadow: 4px 4px 0 #F4F0EB;
+}
+
+html.dark .tipiti-button:hover,
+html.dark .tipiti-button:focus-visible {
+  outline-color: #39FF14;
+  box-shadow: 6px 6px 0 #F4F0EB;
+}
+
+html.dark .tipiti-button:active:not(:disabled) {
+  box-shadow: 0 0 0 #F4F0EB;
+}
+
+html.dark .tipiti-button-primary {
+  background-color: #39FF14 !important;
+  color: #000000 !important;
+  border-color: #F4F0EB !important;
+  box-shadow: 4px 4px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-button-warning {
+  background-color: #FF5F1F !important;
+  color: #000000 !important;
+  border-color: #F4F0EB !important;
+  box-shadow: 4px 4px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-button-yellow {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border-color: #F4F0EB !important;
+  box-shadow: 4px 4px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-button-secondary {
+  background-color: #262626 !important;
+  color: #F4F0EB !important;
+  border-color: #F4F0EB !important;
+  box-shadow: 4px 4px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-button-sm {
+  border-color: #F4F0EB;
+  box-shadow: 3px 3px 0 #F4F0EB;
+}
+
+html.dark .tipiti-input {
+  background-color: #1A1A1A !important;
+  color: #F4F0EB !important;
+  border-color: #F4F0EB !important;
+}
+
+html.dark .tipiti-input:focus-visible {
+  outline-color: #39FF14 !important;
+}
+
+html.dark .tipiti-table th {
+  color: #F4F0EB !important;
+  border-bottom-color: #F4F0EB !important;
+}
+
+html.dark .tipiti-table td {
+  border-bottom-color: #F4F0EB !important;
+}
+
+html.dark .tipiti-skeleton {
+  border-color: #F4F0EB !important;
+  background-color: #242424 !important;
+}
+
+/* Utility overrides in dark mode */
+html.dark .bg-\[\#F4F0EB\] {
+  background-color: #121212 !important;
+}
+
+html.dark .text-black {
+  color: #F4F0EB !important;
+}
+
+html.dark .border-black {
+  border-color: #F4F0EB !important;
+}
+
+html.dark .border-b-black {
+  border-bottom-color: #F4F0EB !important;
+}
+
+html.dark .border-t-black {
+  border-top-color: #F4F0EB !important;
+}
+
+html.dark .bg-white {
+  background-color: #1E1E1E !important;
+  color: #F4F0EB !important;
+}
+
+html.dark .bg-\[\#D6D0C8\] {
+  background-color: #242424 !important;
+}
+
+html.dark .text-black\/50,
+html.dark .text-black\/60,
+html.dark .text-black\/65,
+html.dark .text-black\/70 {
+  color: rgba(244, 240, 235, 0.65) !important;
+}
+
+html.dark .placeholder\:text-black\/50::placeholder {
+  color: rgba(244, 240, 235, 0.45) !important;
+}
+
+html.dark .bg-black {
+  background-color: #F4F0EB !important;
+  color: #121212 !important;
+}
+
+html.dark .bg-black * {
+  color: #121212 !important;
+}
+
+html.dark .text-\[\#F4F0EB\] {
+  color: #121212 !important;
+}
+
+/* Charts in dark mode */
+html.dark .recharts-cartesian-grid line {
+  stroke: #333333 !important;
+}
+
+html.dark .recharts-text {
+  fill: #F4F0EB !important;
+}
+
+html.dark .recharts-cartesian-axis-line,
+html.dark .recharts-cartesian-axis-tick-line {
+  stroke: #F4F0EB !important;
+}

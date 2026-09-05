@@ -8,24 +8,29 @@ colors:
   electric-yellow: "#FFFF00"
   safety-orange: "#FF5F1F"
   bought-gray: "#D6D0C8"
+  obsidian: "#121212"
+  charcoal: "#1E1E1E"
+  dark-surface: "#262626"
 typography:
   display:
-    fontFamily: "Impact, Arial Black, sans-serif"
+    fontFamily: "Anton, Impact, Arial Black, sans-serif"
     fontSize: "32px"
     fontWeight: 900
     lineHeight: 0.95
     letterSpacing: "0.02em"
   body:
-    fontFamily: "Courier New, monospace"
+    fontFamily: "Courier Prime, Courier New, monospace"
     fontSize: "16px"
     fontWeight: 700
     lineHeight: 1.35
   label:
-    fontFamily: "Courier New, monospace"
+    fontFamily: "Courier Prime, Courier New, monospace"
     fontSize: "12px"
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "0.08em"
+  pixel:
+    fontFamily: "Pixelify Sans, monospace"
 rounded:
   none: "0px"
 spacing:

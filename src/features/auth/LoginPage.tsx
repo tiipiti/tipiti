@@ -6,6 +6,7 @@ import type { z } from 'zod'
 
 import { emailSchema, passwordAuthSchema, signupSchema } from '@/features/shopping/forms'
 import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/lib/theme'
 
 type EmailValues = z.infer<typeof emailSchema>
 type PasswordAuthValues = z.infer<typeof passwordAuthSchema>
@@ -163,10 +164,13 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
     <main className="tipiti-page flex min-h-[100dvh] flex-col justify-center">
       <section className="tipiti-panel tipiti-panel-action">
         <div className="flex items-center justify-between border-b-2 border-black pb-3">
-          <p className="tipiti-pixel text-base font-bold uppercase tracking-wider text-black">Tipiti</p>
-          <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-[#F4F0EB] px-2 py-0.5">
-            Acesso
-          </span>
+          <div className="flex items-center gap-2">
+            <p className="tipiti-pixel text-base font-bold uppercase tracking-wider text-black">Tipiti</p>
+            <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-[#F4F0EB] px-2 py-0.5">
+              Acesso
+            </span>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Mode Headings */}
@@ -537,6 +541,11 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
           </div>
         )}
       </section>
+
+      <footer className="mt-6 flex items-center justify-between text-xs font-bold uppercase text-black/70 px-1">
+        <span className="tipiti-pixel text-xs">Tipiti PWA</span>
+        <ThemeToggle compact />
+      </footer>
     </main>
   )
 }
