@@ -11,7 +11,7 @@ export const shoppingKeys = {
 export const useActiveLists = () => useQuery({ queryKey: shoppingKeys.lists, queryFn: api.getActiveLists })
 export const useArchivedLists = () => useQuery({ queryKey: [...shoppingKeys.lists, 'archived'], queryFn: api.getArchivedLists })
 export const useList = (id: string) => useQuery({ queryKey: shoppingKeys.list(id), queryFn: () => api.getList(id) })
-export const useItems = (id: string) => useQuery({ queryKey: shoppingKeys.items(id), queryFn: () => api.getItems(id) })
+export const useItems = (id: string, enabled = true) => useQuery({ queryKey: shoppingKeys.items(id), queryFn: () => api.getItems(id), enabled })
 
 const useInvalidateLists = () => {
   const client = useQueryClient()
