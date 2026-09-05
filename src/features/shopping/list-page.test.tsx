@@ -56,7 +56,7 @@ describe('ListPage', () => {
     expect(document.activeElement).toBe(input)
   })
 
-  it('uses a direct purchase control and item table headers', () => {
+  it('uses a direct purchase checkbox and item table headers', () => {
     render(
       <MemoryRouter initialEntries={['/list/list-1']}>
         <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
@@ -67,8 +67,18 @@ describe('ListPage', () => {
     expect(screen.getByRole('columnheader', { name: 'QTD' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'PREÇO' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'STATUS' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Marcar Feijão como comprado' }).getAttribute('aria-pressed')).toBe('false')
-    expect(screen.getAllByText('COMPRADO').length).toBeGreaterThan(0)
+
+    // Unpurchased item (Feijão) has checkbox unchecked and has Editar button
+    const beansCheckbox = screen.getByRole('checkbox', { name: 'Marcar Feijão como comprado' })
+    expect(beansCheckbox).toHaveAttribute('aria-checked', 'false')
+
+    // Purchased item (Arroz) has checkbox checked and does NOT have Editar button (only Excluir is active)
+    const riceCheckbox = screen.getByRole('checkbox', { name: 'Marcar Arroz como não comprado' })
+    expect(riceCheckbox).toHaveAttribute('aria-checked', 'true')
+
+    // Only 1 Editar button is rendered (for Feijão), while both have Excluir
+    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Excluir' })).toHaveLength(2)
   })
 
   it('opens confirmation modal and resets purchased items when clicking Desmarcar comprados', async () => {
@@ -163,6 +173,36 @@ describe('ListPage', () => {
       expect(deleteItemMutate).toHaveBeenCalledWith({
         id: 'beans',
         listId: 'list-1',
+      }),
+    )
+  })
+
+  it('edits only the price of an item since quantity is managed by steppers', async () => {
+    updateItemMutate.mockReset()
+    render(
+      <MemoryRouter initialEntries={['/list/list-1']}>
+        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
+      </MemoryRouter>,
+    )
+
+    // Click Editar on Feijão
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+
+    // Should only have Preço unitário field, no Quantidade input
+    expect(screen.queryByLabelText('Quantidade')).toBeNull()
+    const priceInput = screen.getByLabelText('Preço unitário (R$)')
+    expect(priceInput).toBeInTheDocument()
+
+    // Change price and submit
+    fireEvent.change(priceInput, { target: { value: '11.50' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await waitFor(() =>
+      expect(updateItemMutate).toHaveBeenCalledWith({
+        id: 'beans',
+        listId: 'list-1',
+        quantity: 1,
+        price: 11.5,
       }),
     )
   })

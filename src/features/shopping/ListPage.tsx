@@ -291,7 +291,7 @@ export function ListPage() {
                 <th>ITEM</th>
                 <th>QTD</th>
                 <th>PREÇO</th>
-                <th>STATUS</th>
+                <th className="text-center">STATUS</th>
               </tr>
             </thead>
             <tbody>

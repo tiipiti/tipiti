@@ -91,6 +91,17 @@ export const updatePasswordSchema = z
     path: ['confirm_password'],
   })
 
+export const editItemPriceSchema = z.object({
+  price: z.preprocess(
+    parseDecimal,
+    z
+      .number()
+      .finite()
+      .nonnegative('O preço não pode ser negativo')
+      .max(999999.99, 'Preço máximo permitido é R$ 999.999,99'),
+  ),
+})
+
 export const itemSchema = z.object({
   quantity: z.preprocess(
     parseDecimal,

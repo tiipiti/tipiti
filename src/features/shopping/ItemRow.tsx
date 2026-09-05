@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { triggerHaptic } from '@/lib/haptic'
-import { formatCurrency, itemSchema } from './forms'
+import { editItemPriceSchema, formatCurrency } from './forms'
 import { PixelCheck } from './PixelIcons'
 import { useDeleteItem, useToggleItem, useUpdateItem } from './queries'
 import type { Item } from './types'
@@ -21,12 +21,13 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(itemSchema),
-    defaultValues: { quantity: item.quantity, price: item.price },
+    resolver: zodResolver(editItemPriceSchema),
+    defaultValues: { price: item.price },
   })
 
   const toggleItem = async () => {
     triggerHaptic(item.is_purchased ? 15 : 35)
+    setEditing(false)
     try {
       await toggle.mutateAsync({ id: item.id, listId: item.list_id, is_purchased: !item.is_purchased })
       setRetry(null)
@@ -47,13 +48,13 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
     }
   }
 
-  const saveItem = async (values: { quantity: number; price: number }) => {
+  const savePrice = async ({ price }: { price: number }) => {
     try {
-      await update.mutateAsync({ id: item.id, listId: item.list_id, ...values })
+      await update.mutateAsync({ id: item.id, listId: item.list_id, quantity: item.quantity, price })
       setEditing(false)
       setRetry(null)
     } catch {
-      setRetry(() => () => void saveItem(values))
+      setRetry(() => () => void savePrice({ price }))
     }
   }
 
@@ -80,13 +81,15 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           </span>
           {!readOnly && (
             <div className="mt-2 flex gap-2 text-xs font-bold uppercase">
-              <button
-                className="tipiti-button tipiti-button-sm tipiti-button-secondary cursor-pointer"
-                type="button"
-                onClick={() => setEditing((value) => !value)}
-              >
-                Editar
-              </button>
+              {!item.is_purchased && (
+                <button
+                  className="tipiti-button tipiti-button-sm tipiti-button-secondary cursor-pointer"
+                  type="button"
+                  onClick={() => setEditing((value) => !value)}
+                >
+                  Editar
+                </button>
+              )}
               <button
                 className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
                 disabled={remove.isPending}
@@ -99,7 +102,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           )}
         </td>
         <td className="p-3 align-top text-sm font-bold text-black tabular-nums">
-          {readOnly ? (
+          {readOnly || item.is_purchased ? (
             item.quantity
           ) : (
             <div className="inline-flex items-center gap-1 border-2 border-black bg-[#F4F0EB] p-0.5">
@@ -128,66 +131,39 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           )}
         </td>
         <td className="p-3 align-top text-sm font-bold text-black tabular-nums">{formatCurrency(item.price)}</td>
-        <td className="p-3 align-top">
+        <td className="p-3 align-top text-center">
           <button
-            className={`tipiti-status transition-transform active:translate-x-1 active:translate-y-1 ${
-              item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-white hover:bg-[#39FF14]/20'
-            }`}
-            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
-            aria-pressed={item.is_purchased}
-            disabled={readOnly || toggle.isPending}
             type="button"
+            role="checkbox"
+            aria-checked={item.is_purchased}
+            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
+            disabled={readOnly || toggle.isPending}
             onClick={() => void toggleItem()}
+            className={`inline-flex h-8 w-8 items-center justify-center border-[3px] border-black transition-all cursor-pointer ${
+              item.is_purchased
+                ? 'bg-[#39FF14] shadow-[2px_2px_0_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+                : 'bg-white shadow-[3px_3px_0_#000000] hover:bg-[#39FF14]/20 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+            }`}
           >
-            {item.is_purchased ? (
-              <PixelCheck width={14} height={14} />
-            ) : (
-              <span
-                className="inline-block h-3.5 w-3.5 border-2 border-black bg-white"
-                aria-hidden="true"
-              />
-            )}
-            <span className="tipiti-pixel text-xs tracking-wider">
-              COMPRADO
-            </span>
+            {item.is_purchased ? <PixelCheck width={18} height={18} /> : null}
           </button>
         </td>
       </tr>
 
-      {editing && !readOnly && (
+      {editing && !readOnly && !item.is_purchased && (
         <tr className="border-b-[3px] border-black bg-[#F4F0EB]">
           <td className="p-3" colSpan={4}>
             <form
-              className="tipiti-panel tipiti-panel-action grid grid-cols-2 gap-3"
-              onSubmit={handleSubmit(saveItem)}
+              className="tipiti-panel tipiti-panel-action flex flex-col gap-3 sm:flex-row sm:items-end"
+              onSubmit={handleSubmit(savePrice)}
               noValidate
             >
-              <div className="grid gap-1">
-                <label
-                  className="text-xs font-bold uppercase tracking-wider text-black"
-                  htmlFor={`quantity-${item.id}`}
-                >
-                  Quantidade
-                </label>
-                <input
-                  id={`quantity-${item.id}`}
-                  className="tipiti-input text-sm"
-                  inputMode="decimal"
-                  max={99999}
-                  maxLength={8}
-                  aria-invalid={Boolean(errors.quantity)}
-                  {...register('quantity')}
-                />
-                <p className="min-h-4 text-xs font-bold text-[#FF5F1F]">
-                  {errors.quantity?.message}
-                </p>
-              </div>
-              <div className="grid gap-1">
+              <div className="grid flex-1 gap-1">
                 <label
                   className="text-xs font-bold uppercase tracking-wider text-black"
                   htmlFor={`price-${item.id}`}
                 >
-                  Preço unitário
+                  Preço unitário (R$)
                 </label>
                 <input
                   id={`price-${item.id}`}
@@ -202,16 +178,16 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                   {errors.price?.message}
                 </p>
               </div>
-              <div className="col-span-2 flex gap-2 pt-2">
+              <div className="flex gap-2 pb-5 sm:pb-0">
                 <button
-                  className="tipiti-button tipiti-button-primary py-2 text-xs"
+                  className="tipiti-button tipiti-button-primary py-2 px-4 text-xs cursor-pointer"
                   disabled={update.isPending}
                   type="submit"
                 >
                   Salvar
                 </button>
                 <button
-                  className="tipiti-button py-2 text-xs"
+                  className="tipiti-button py-2 px-3 text-xs cursor-pointer"
                   type="button"
                   onClick={() => setEditing(false)}
                 >

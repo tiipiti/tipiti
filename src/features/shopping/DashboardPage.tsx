@@ -21,9 +21,6 @@ export function DashboardPage() {
           <Link to="/history" className="tipiti-button py-2 text-xs">
             Histórico
           </Link>
-          <Link to="/profile" className="tipiti-button py-2 text-xs">
-            Perfil
-          </Link>
           <Link to="/home" className="tipiti-button py-2 text-xs">
             ← Início
           </Link>
