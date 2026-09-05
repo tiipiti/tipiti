@@ -117,22 +117,9 @@ export function HomePage() {
           <Link to="/dashboard" className="tipiti-button py-2 text-xs">
             Dashboard
           </Link>
-          <Link to="/history" className="tipiti-button py-2 text-xs">
-            Histórico
-          </Link>
           <Link to="/profile" className="tipiti-button py-2 text-xs" aria-label="Meu Perfil">
             Perfil
           </Link>
-          {active.data?.length ? (
-            <button
-              className="tipiti-button tipiti-button-primary py-2 text-xs"
-              disabled={create.isPending}
-              type="button"
-              onClick={() => setCreating(true)}
-            >
-              + Nova lista
-            </button>
-          ) : null}
         </div>
       </header>
 
@@ -162,22 +149,30 @@ export function HomePage() {
               </div>
               <PixelCoin width={32} height={32} />
             </div>
-            <div className="mt-3 border-t-2 border-black pt-2 text-xs font-bold uppercase tracking-wide text-black flex items-center justify-between">
-              <div>
-                <p>
-                  {currentPurchases} {currentPurchases === 1 ? 'COMPRA FINALIZADA' : 'COMPRAS FINALIZADAS'}
-                </p>
-                <p className="mt-0.5">{diffText}</p>
-              </div>
-              <span className="underline text-xs font-bold">
-                Abrir gráficos e histórico ➔
-              </span>
+            <div className="mt-3 border-t-2 border-black pt-2 text-xs font-bold uppercase tracking-wide text-black">
+              <p>
+                {currentPurchases} {currentPurchases === 1 ? 'COMPRA FINALIZADA' : 'COMPRAS FINALIZADAS'}
+              </p>
+              <p className="mt-0.5">{diffText}</p>
             </div>
           </Link>
         </div>
       ) : null}
 
-      {creating && (
+      {/* Botão + Nova Lista (ou formulário) logo abaixo do banner de consumo */}
+      {!creating ? (
+        <div className="mt-6">
+          <button
+            className="tipiti-button tipiti-button-primary w-full py-3 text-sm font-bold uppercase tracking-wider cursor-pointer"
+            disabled={create.isPending}
+            type="button"
+            onClick={() => setCreating(true)}
+            aria-label="Nova lista"
+          >
+            + Nova lista
+          </button>
+        </div>
+      ) : (
         <form
           className="tipiti-panel tipiti-panel-action mt-6 grid gap-3"
           onSubmit={handleSubmit(createList)}
@@ -190,16 +185,27 @@ export function HomePage() {
             <input
               id="list-name"
               className="tipiti-input flex-1"
+              placeholder="Ex.: Compras da semana"
               maxLength={100}
               aria-invalid={Boolean(errors.name)}
               {...register('name')}
             />
             <button
-              className="tipiti-button tipiti-button-primary"
+              className="tipiti-button tipiti-button-primary cursor-pointer"
               disabled={create.isPending}
               type="submit"
             >
               Criar lista
+            </button>
+            <button
+              className="tipiti-button cursor-pointer"
+              type="button"
+              onClick={() => {
+                setCreating(false)
+                reset()
+              }}
+            >
+              Cancelar
             </button>
           </div>
           <p className="min-h-5 text-xs font-bold text-[#FF5F1F]" role="alert">
@@ -212,7 +218,7 @@ export function HomePage() {
         <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
           <p className="font-bold">{error.message}</p>
           <button
-            className="mt-2 font-bold underline"
+            className="mt-2 font-bold underline cursor-pointer"
             type="button"
             onClick={() => void (retry ? retry() : clone.error ? cloneList() : active.refetch())}
           >
@@ -222,7 +228,7 @@ export function HomePage() {
       )}
 
       {!active.data?.length ? (
-        <section className="tipiti-panel mt-8 text-center">
+        <section className="tipiti-panel mt-6 text-center">
           <div className="flex justify-center">
             <PixelCart width={48} height={48} />
           </div>
@@ -230,18 +236,8 @@ export function HomePage() {
             Sua próxima compra começa aqui.
           </h2>
           <p className="mt-2 text-sm font-bold text-black">
-            Crie uma lista para adicionar seus itens.
+            Crie uma lista acima para adicionar seus itens.
           </p>
-          {!creating && (
-            <button
-              className="tipiti-button tipiti-button-primary mt-6"
-              disabled={create.isPending}
-              type="button"
-              onClick={() => setCreating(true)}
-            >
-              Nova lista
-            </button>
-          )}
         </section>
       ) : (
         <section className="mt-6 grid gap-4">

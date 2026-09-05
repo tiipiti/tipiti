@@ -9,7 +9,7 @@ export function DashboardPage() {
         <div>
           <div className="flex items-center gap-2">
             <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">Tipiti</p>
-            <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#F4F0EB]">
+            <span className="bg-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-[#F4F0EB]">
               Dashboard
             </span>
           </div>
@@ -18,6 +18,9 @@ export function DashboardPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/history" className="tipiti-button py-2 text-xs">
+            Histórico
+          </Link>
           <Link to="/profile" className="tipiti-button py-2 text-xs">
             Perfil
           </Link>
