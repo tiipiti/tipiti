@@ -75,7 +75,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         }`}
         data-testid="item-row"
       >
-        <td className="p-3">
+        <td className="p-3 align-middle">
           <span className={`font-bold uppercase text-black ${item.is_purchased ? 'line-through' : ''}`}>
             {item.name}
           </span>
@@ -101,7 +101,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
             </div>
           )}
         </td>
-        <td className="p-3 align-top text-sm font-bold text-black tabular-nums">
+        <td className="p-3 align-middle text-sm font-bold text-black tabular-nums">
           {readOnly || item.is_purchased ? (
             item.quantity
           ) : (
@@ -130,8 +130,8 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
             </div>
           )}
         </td>
-        <td className="p-3 align-top text-sm font-bold text-black tabular-nums">{formatCurrency(item.price)}</td>
-        <td className="p-3 align-top text-center">
+        <td className="p-3 align-middle text-sm font-bold text-black tabular-nums">{formatCurrency(item.price)}</td>
+        <td className="p-3 align-middle text-center">
           <button
             type="button"
             role="checkbox"
@@ -154,11 +154,20 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         <tr className="border-b-[3px] border-black bg-[#F4F0EB]">
           <td className="p-3" colSpan={4}>
             <form
-              className="tipiti-panel tipiti-panel-action flex flex-col gap-3 sm:flex-row sm:items-end"
+              className="tipiti-panel tipiti-panel-action border-2 border-black bg-white p-3.5"
               onSubmit={handleSubmit(savePrice)}
               noValidate
             >
-              <div className="grid flex-1 gap-1">
+              <div className="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-black truncate mr-2">
+                  Atualizar Preço: {item.name}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-[#F4F0EB] px-1.5 py-0.5 shrink-0">
+                  Edição
+                </span>
+              </div>
+
+              <div className="grid gap-1">
                 <label
                   className="text-xs font-bold uppercase tracking-wider text-black"
                   htmlFor={`price-${item.id}`}
@@ -167,27 +176,30 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                 </label>
                 <input
                   id={`price-${item.id}`}
-                  className="tipiti-input text-sm"
+                  className="tipiti-input w-full text-base font-bold tabular-nums"
                   inputMode="decimal"
                   max={999999.99}
                   maxLength={12}
                   aria-invalid={Boolean(errors.price)}
                   {...register('price')}
                 />
-                <p className="min-h-4 text-xs font-bold text-[#FF5F1F]">
-                  {errors.price?.message}
-                </p>
+                {errors.price && (
+                  <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
+                    {errors.price.message}
+                  </p>
+                )}
               </div>
-              <div className="flex gap-2 pb-5 sm:pb-0">
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
-                  className="tipiti-button tipiti-button-primary py-2 px-4 text-xs cursor-pointer"
+                  className="tipiti-button tipiti-button-primary py-2 text-xs font-bold uppercase cursor-pointer"
                   disabled={update.isPending}
                   type="submit"
                 >
-                  Salvar
+                  {update.isPending ? 'Salvando...' : 'Salvar'}
                 </button>
                 <button
-                  className="tipiti-button py-2 px-3 text-xs cursor-pointer"
+                  className="tipiti-button tipiti-button-secondary py-2 text-xs font-bold uppercase cursor-pointer"
                   type="button"
                   onClick={() => setEditing(false)}
                 >

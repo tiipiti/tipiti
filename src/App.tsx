@@ -19,7 +19,7 @@ function PrivatePage({ children }: { children: ReactNode }) {
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage initialMode="login" />} />
       <Route path="/signup" element={<LoginPage initialMode="signup" />} />
       <Route path="/cadastro" element={<LoginPage initialMode="signup" />} />
       <Route path="/auth/callback" element={<CallbackPage />} />

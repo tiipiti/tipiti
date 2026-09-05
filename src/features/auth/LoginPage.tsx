@@ -169,37 +169,6 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
           </span>
         </div>
 
-        {/* Mode Selector Tabs */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            className={`tipiti-button py-2 text-[11px] ${
-              mode === 'signup' ? 'tipiti-button-primary' : 'tipiti-button-secondary'
-            }`}
-            onClick={() => switchMode('signup')}
-          >
-            Cadastrar
-          </button>
-          <button
-            type="button"
-            className={`tipiti-button py-2 text-[11px] ${
-              mode === 'login' ? 'tipiti-button-primary' : 'tipiti-button-secondary'
-            }`}
-            onClick={() => switchMode('login')}
-          >
-            Acessar
-          </button>
-          <button
-            type="button"
-            className={`tipiti-button py-2 text-[11px] ${
-              mode === 'magic-link' ? 'tipiti-button-primary' : 'tipiti-button-secondary'
-            }`}
-            onClick={() => switchMode('magic-link')}
-          >
-            Só E-mail
-          </button>
-        </div>
-
         {/* Mode Headings */}
         <div className="mt-5">
           {mode === 'signup' && (
@@ -353,22 +322,24 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               </p>
             )}
 
-            <button
-              className="tipiti-button tipiti-button-primary w-full mt-2"
-              disabled={requesting}
-              type="submit"
-            >
-              {requesting ? 'Criando conta...' : 'Criar conta'}
-            </button>
-
-            <div className="mt-3 flex flex-col gap-2 border-t-2 border-black pt-3 text-center text-xs font-bold uppercase">
+            <div className="mt-2 flex flex-col gap-2">
+              <button
+                className="tipiti-button tipiti-button-primary w-full"
+                disabled={requesting}
+                type="submit"
+              >
+                {requesting ? 'Criando conta...' : 'Criar conta'}
+              </button>
               <button
                 type="button"
-                className="underline cursor-pointer text-black"
+                className="tipiti-button tipiti-button-secondary w-full"
                 onClick={() => switchMode('login')}
               >
-                Já tem conta? Entrar com senha
+                Já tem conta? Entrar
               </button>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2 border-t-2 border-black pt-3 text-center text-xs font-bold uppercase">
               <button
                 type="button"
                 className="underline cursor-pointer text-black"
@@ -443,22 +414,24 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               </p>
             )}
 
-            <button
-              className="tipiti-button tipiti-button-primary w-full mt-2"
-              disabled={requesting}
-              type="submit"
-            >
-              {requesting ? 'Entrando...' : 'Entrar'}
-            </button>
-
-            <div className="mt-3 flex flex-col gap-2 border-t-2 border-black pt-3 text-center text-xs font-bold uppercase">
+            <div className="mt-2 flex flex-col gap-2">
+              <button
+                className="tipiti-button tipiti-button-primary w-full"
+                disabled={requesting}
+                type="submit"
+              >
+                {requesting ? 'Entrando...' : 'Entrar'}
+              </button>
               <button
                 type="button"
-                className="underline cursor-pointer text-black"
+                className="tipiti-button tipiti-button-secondary w-full"
                 onClick={() => switchMode('signup')}
               >
-                Não tem conta? Cadastre-se
+                Cadastrar
               </button>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2 border-t-2 border-black pt-3 text-center text-xs font-bold uppercase">
               <button
                 type="button"
                 className="underline cursor-pointer text-black"
@@ -533,13 +506,22 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                   </p>
                 )}
 
-                <button
-                  className="tipiti-button tipiti-button-primary w-full"
-                  disabled={requesting}
-                  type="submit"
-                >
-                  {requesting ? 'Enviando...' : 'Começar'}
-                </button>
+                <div className="mt-2 flex flex-col gap-2">
+                  <button
+                    className="tipiti-button tipiti-button-primary w-full"
+                    disabled={requesting}
+                    type="submit"
+                  >
+                    {requesting ? 'Enviando...' : 'Começar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="tipiti-button tipiti-button-secondary w-full"
+                    onClick={() => switchMode('login')}
+                  >
+                    Entrar com senha
+                  </button>
+                </div>
 
                 <div className="mt-3 flex flex-col gap-2 border-t-2 border-black pt-3 text-center text-xs font-bold uppercase">
                   <button
@@ -548,13 +530,6 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                     onClick={() => switchMode('signup')}
                   >
                     Criar conta com senha
-                  </button>
-                  <button
-                    type="button"
-                    className="underline cursor-pointer text-black"
-                    onClick={() => switchMode('login')}
-                  >
-                    Já possui senha? Entrar
                   </button>
                 </div>
               </form>

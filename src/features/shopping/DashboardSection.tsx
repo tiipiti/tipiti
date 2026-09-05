@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
 import {
@@ -18,8 +17,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function DashboardSection() {
-  const [monthsRange, setMonthsRange] = useState<6 | 12>(6)
+export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) {
   const historyQuery = useMonthlyHistory(monthsRange)
 
   const history = historyQuery.data?.history ?? []
@@ -31,44 +29,6 @@ export function DashboardSection() {
 
   return (
     <section className="mt-6 space-y-6" aria-label="Área de Dashboard e Linha do Tempo">
-      {/* Header com filtro de meses e título */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b-4 border-black pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#F4F0EB]">
-              Dashboard
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-black">
-              Evolução Financeira
-            </span>
-          </div>
-          <h2 className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase tracking-tight text-black mt-1">
-            Gastos e Linha do Tempo
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={`tipiti-button py-1.5 px-3 text-xs ${
-              monthsRange === 6 ? 'tipiti-button-primary' : 'tipiti-button-secondary'
-            }`}
-            onClick={() => setMonthsRange(6)}
-          >
-            6 Meses
-          </button>
-          <button
-            type="button"
-            className={`tipiti-button py-1.5 px-3 text-xs ${
-              monthsRange === 12 ? 'tipiti-button-primary' : 'tipiti-button-secondary'
-            }`}
-            onClick={() => setMonthsRange(12)}
-          >
-            12 Meses
-          </button>
-        </div>
-      </div>
-
       {historyQuery.isLoading && (
         <div className="grid gap-4">
           <div className="tipiti-skeleton h-24" />
