@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
 
 type SessionGateProps = {
@@ -10,10 +10,17 @@ type SessionGateProps = {
 
 export function AuthLoading() {
   return (
-    <main aria-busy="true" aria-label="Carregando" className="grid min-h-[100dvh] place-items-center bg-zinc-50 p-5 text-zinc-950">
-      <section className="w-full max-w-sm rounded-3xl border border-zinc-200 bg-white p-6 shadow-[0_16px_40px_-24px_rgba(24,24,27,0.3)]">
-        <p className="text-sm font-medium text-emerald-700">Tipiti</p>
-        <p className="mt-3 text-sm text-zinc-600" role="status">Preparando sua lista...</p>
+    <main
+      aria-busy="true"
+      aria-label="Carregando"
+      className="grid min-h-[100dvh] place-items-center bg-[#F4F0EB] p-5 text-black"
+    >
+      <section className="tipiti-panel tipiti-panel-action w-full max-w-sm text-center">
+        <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
+        <p className="mt-3 text-sm font-bold uppercase text-black" role="status">
+          Preparando sua lista...
+        </p>
+        <div className="tipiti-skeleton mt-4 h-4 w-full" />
       </section>
     </main>
   )

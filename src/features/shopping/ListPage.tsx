@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 
-import { nameSchema, formatCurrency } from './forms'
+import { formatCurrency, nameSchema } from './forms'
 import { ItemRow } from './ItemRow'
+import { PixelCoin } from './PixelIcons'
 import { useArchiveList, useCreateItem, useItems, useList, useReopenList } from './queries'
 import { purchasedTotal } from './total'
 
@@ -21,9 +22,22 @@ export function ListPage() {
   const archive = useArchiveList()
   const reopen = useReopenList()
   const [retry, setRetry] = useState<(() => void) | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<NewItemValues>({ resolver: zodResolver(newItemSchema), defaultValues: { name: '' } })
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<NewItemValues>({
+    resolver: zodResolver(newItemSchema),
+    defaultValues: { name: '' },
+  })
   const { ref: newItemRef, ...newItemInput } = register('name')
+
+  const setMergedInputRef = useCallback((element: HTMLInputElement | null) => {
+    newItemRef(element)
+    inputRef.current = element
+  }, [newItemRef])
 
   const addItem = async ({ name }: NewItemValues) => {
     try {
@@ -55,20 +69,153 @@ export function ListPage() {
     }
   }
 
-  if (list.isLoading || items.isLoading) return <main className="mx-auto min-h-[100dvh] max-w-xl p-5"><div className="mt-8 h-56 animate-pulse rounded-2xl bg-zinc-200" /></main>
-  if (list.error || items.error || !list.data) return <main className="grid min-h-[100dvh] place-items-center p-5"><section className="text-center"><h1 className="text-2xl font-semibold">Lista não encontrada</h1><Link className="mt-4 inline-block text-emerald-700 underline" to="/home">Voltar para listas</Link></section></main>
+  if (list.isLoading || items.isLoading) {
+    return (
+      <main className="tipiti-page">
+        <div className="tipiti-skeleton mt-8 h-56" />
+      </main>
+    )
+  }
 
-  const orderedItems = [...(items.data ?? [])].sort((a, b) => Number(a.is_purchased) - Number(b.is_purchased))
+  if (list.error || items.error || !list.data) {
+    return (
+      <main className="grid min-h-[100dvh] place-items-center bg-[#F4F0EB] p-5">
+        <section className="tipiti-panel text-center">
+          <h1 className="font-['Impact','Arial_Black',sans-serif] text-2xl uppercase tracking-tight text-black">
+            Lista não encontrada
+          </h1>
+          <Link className="tipiti-button mt-4" to="/home">
+            Voltar para listas
+          </Link>
+        </section>
+      </main>
+    )
+  }
+
+  const orderedItems = [...(items.data ?? [])].sort(
+    (a, b) => Number(a.is_purchased) - Number(b.is_purchased),
+  )
   const total = purchasedTotal(items.data ?? [])
   const readOnly = list.data.is_archived
 
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-xl bg-zinc-50 pb-28 text-zinc-950">
-      <header className="flex items-start justify-between gap-4 border-b border-zinc-200 bg-white p-5"><div><Link className="text-sm text-emerald-700 underline" to={readOnly ? '/history' : '/home'}>Voltar</Link><h1 className="mt-2 text-3xl font-semibold tracking-tight">{list.data.name}</h1></div>{readOnly ? <button className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white active:scale-[0.98]" disabled={reopen.isPending} type="button" onClick={() => void reopenCurrentList()}>Reabrir lista</button> : <button className="rounded-xl border border-zinc-300 px-3 py-2 text-sm font-medium active:scale-[0.98]" disabled={archive.isPending} type="button" onClick={() => void finish()}>Finalizar compra</button>}</header>
-      {!readOnly && <form className="grid gap-2 border-b border-zinc-200 bg-white p-5" onSubmit={handleSubmit(addItem)} noValidate><label className="text-sm font-medium" htmlFor="new-item">Adicionar item</label><div className="flex gap-2"><input id="new-item" className="min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 py-2.5 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100" placeholder="Ex.: arroz" aria-invalid={Boolean(errors.name)} {...newItemInput} ref={(element) => { newItemRef(element); inputRef.current = element }} /><button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-medium text-white active:scale-[0.98]" disabled={createItem.isPending} type="submit">Adicionar</button></div><p className="min-h-5 text-sm text-red-700" role="alert">{errors.name?.message}</p></form>}
-      {retry && <div className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"><p>Não foi possível salvar a alteração.</p><button className="mt-2 font-medium underline" type="button" onClick={retry}>Tentar novamente</button></div>}
-      {!orderedItems.length ? <p className="px-5 pt-12 text-center text-zinc-600">Nenhum item nesta lista.</p> : <div className="px-5"><table className="w-full border-collapse"><thead className="text-left text-xs text-zinc-500"><tr><th className="py-3 font-medium">ITEM</th><th className="py-3 font-medium">QTD</th><th className="py-3 font-medium">PREÇO</th><th className="py-3 font-medium">STATUS</th></tr></thead><tbody>{orderedItems.map((item) => <ItemRow key={item.id} item={item} readOnly={readOnly} />)}</tbody></table></div>}
-      <footer className="fixed inset-x-0 bottom-0 border-t border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur"><div className="mx-auto flex max-w-xl items-center justify-between"><span className="text-sm text-zinc-600">No carrinho</span><strong>{formatCurrency(total)}</strong></div></footer>
+    <main className="tipiti-page pb-32">
+      <header className="border-b-4 border-black pb-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <Link
+              className="text-xs font-bold uppercase tracking-wider text-black underline"
+              to={readOnly ? '/history' : '/home'}
+            >
+              Voltar
+            </Link>
+            <h1 className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl uppercase tracking-tight text-black">
+              {list.data.name}
+            </h1>
+          </div>
+          {readOnly ? (
+            <button
+              className="tipiti-button tipiti-button-primary py-2 text-xs"
+              disabled={reopen.isPending}
+              type="button"
+              onClick={() => void reopenCurrentList()}
+            >
+              Reabrir lista
+            </button>
+          ) : (
+            <button
+              className="tipiti-button tipiti-button-warning py-2 text-xs"
+              disabled={archive.isPending}
+              type="button"
+              onClick={() => void finish()}
+            >
+              Finalizar compra
+            </button>
+          )}
+        </div>
+      </header>
+
+      {!readOnly && (
+        <form
+          className="tipiti-panel tipiti-panel-action mt-6 grid gap-3"
+          onSubmit={(e) => {
+            void handleSubmit(addItem)(e)
+          }}
+          noValidate
+        >
+          <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="new-item">
+            Adicionar item
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              id="new-item"
+              className="tipiti-input flex-1"
+              placeholder="Ex.: arroz"
+              aria-invalid={Boolean(errors.name)}
+              {...newItemInput}
+              ref={setMergedInputRef}
+            />
+            <button
+              className="tipiti-button tipiti-button-primary"
+              disabled={createItem.isPending}
+              type="submit"
+            >
+              Adicionar
+            </button>
+          </div>
+          <p className="min-h-5 text-xs font-bold text-[#FF5F1F]" role="alert">
+            {errors.name?.message}
+          </p>
+        </form>
+      )}
+
+      {retry && (
+        <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
+          <p className="font-bold">Não foi possível salvar a alteração.</p>
+          <button className="mt-2 font-bold underline" type="button" onClick={retry}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
+      {!orderedItems.length ? (
+        <div className="tipiti-panel mt-8 text-center font-bold uppercase text-black">
+          <p>Nenhum item nesta lista.</p>
+        </div>
+      ) : (
+        <div className="mt-6 overflow-x-auto border-4 border-black bg-[#F4F0EB]">
+          <table className="tipiti-table">
+            <thead>
+              <tr>
+                <th>ITEM</th>
+                <th>QTD</th>
+                <th>PREÇO</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderedItems.map((item) => (
+                <ItemRow key={item.id} item={item} readOnly={readOnly} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Solid ink bottom bar, NO backdrop-blur */}
+      <footer className="fixed inset-x-0 bottom-0 border-t-4 border-black bg-[#F4F0EB] p-4">
+        <div className="mx-auto flex max-w-xl items-center justify-between">
+          <div className="flex items-center gap-2">
+            <PixelCoin width={24} height={24} />
+            <span className="text-xs font-bold uppercase tracking-wider text-black">
+              No carrinho
+            </span>
+          </div>
+          <strong className="font-['Impact','Arial_Black',sans-serif] text-2xl font-black text-black">
+            {formatCurrency(total)}
+          </strong>
+        </div>
+      </footer>
     </main>
   )
 }
