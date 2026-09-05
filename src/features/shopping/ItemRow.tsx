@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Fragment, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { ConfirmModal } from '@/components/ConfirmModal'
+import { useConfirm } from '@/components/ConfirmModal'
 import { triggerHaptic } from '@/lib/haptic'
 import { editItemPriceSchema, formatCurrency } from './forms'
 import { PixelCheck } from './PixelIcons'
@@ -10,8 +10,8 @@ import { useDeleteItem, useToggleItem, useUpdateItem } from './queries'
 import type { Item } from './types'
 
 export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(false)
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const toggle = useToggleItem()
   const update = useUpdateItem()
@@ -115,7 +115,16 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                   className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
                   disabled={remove.isPending}
                   type="button"
-                  onClick={() => setConfirmDeleteOpen(true)}
+                  onClick={() => {
+                    void confirm({
+                      title: 'Excluir Item',
+                      message: `Deseja remover "${item.name}" da lista? Esta ação não pode ser desfeita.`,
+                      variant: 'danger',
+                      confirmText: 'Sim, Excluir',
+                      cancelText: 'Voltar',
+                      onConfirm: deleteCurrentItem,
+                    })
+                  }}
                 >
                   Excluir
                 </button>
@@ -229,21 +238,6 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           </td>
         </tr>
       )}
-
-      <ConfirmModal
-        open={confirmDeleteOpen}
-        title="Excluir Item"
-        message={`Deseja remover "${item.name}" da lista? Esta ação não pode ser desfeita.`}
-        variant="danger"
-        confirmText="Sim, Excluir"
-        cancelText="Voltar"
-        isPending={remove.isPending}
-        onConfirm={async () => {
-          await deleteCurrentItem()
-          setConfirmDeleteOpen(false)
-        }}
-        onCancel={() => setConfirmDeleteOpen(false)}
-      />
     </Fragment>
   )
 }

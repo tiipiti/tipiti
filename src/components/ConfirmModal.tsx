@@ -1,4 +1,11 @@
-import { useEffect } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
 
 export interface ConfirmModalProps {
   open: boolean
@@ -42,7 +49,7 @@ export function ConfirmModal({
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
       aria-describedby="confirm-modal-desc"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isPending) {
           onCancel()
@@ -100,3 +107,89 @@ export function ConfirmModal({
     </div>
   )
 }
+
+export interface ConfirmOptions {
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  variant?: 'danger' | 'warning' | 'default'
+  onConfirm?: () => Promise<void> | void
+}
+
+type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
+
+const ConfirmContext = createContext<ConfirmFn | null>(null)
+
+interface ActiveConfirmState {
+  options: ConfirmOptions
+  isPending: boolean
+  resolve: (value: boolean) => void
+}
+
+export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const [active, setActive] = useState<ActiveConfirmState | null>(null)
+
+  const confirm: ConfirmFn = useCallback((options) => {
+    return new Promise<boolean>((resolve) => {
+      setActive({
+        options,
+        isPending: false,
+        resolve,
+      })
+    })
+  }, [])
+
+  const handleCancel = useCallback(() => {
+    if (!active || active.isPending) return
+    active.resolve(false)
+    setActive(null)
+  }, [active])
+
+  const handleConfirm = useCallback(async () => {
+    if (!active || active.isPending) return
+    if (active.options.onConfirm) {
+      setActive((prev) => (prev ? { ...prev, isPending: true } : null))
+      try {
+        await active.options.onConfirm()
+        active.resolve(true)
+        setActive(null)
+      } catch (err) {
+        setActive(null)
+        active.resolve(false)
+        throw err
+      }
+    } else {
+      active.resolve(true)
+      setActive(null)
+    }
+  }, [active])
+
+  return (
+    <ConfirmContext.Provider value={confirm}>
+      {children}
+      {active && (
+        <ConfirmModal
+          open={true}
+          title={active.options.title}
+          message={active.options.message}
+          confirmText={active.options.confirmText}
+          cancelText={active.options.cancelText}
+          variant={active.options.variant}
+          isPending={active.isPending}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
+    </ConfirmContext.Provider>
+  )
+}
+
+export function useConfirm() {
+  const ctx = useContext(ConfirmContext)
+  if (!ctx) {
+    throw new Error('useConfirm must be used within a ConfirmProvider')
+  }
+  return ctx
+}
+

@@ -25,7 +25,17 @@ vi.mock('./session', () => ({
   useSession: () => ({ session, loading: false }),
 }))
 
+import type { ReactNode } from 'react'
+import { ConfirmProvider } from '@/components/ConfirmModal'
 import { ProfilePage } from './ProfilePage'
+
+function Wrapper({ children }: { children: ReactNode }) {
+  return (
+    <MemoryRouter>
+      <ConfirmProvider>{children}</ConfirmProvider>
+    </MemoryRouter>
+  )
+}
 
 describe('ProfilePage', () => {
   beforeEach(() => {
@@ -36,7 +46,7 @@ describe('ProfilePage', () => {
   afterEach(cleanup)
 
   it('renders profile with user display name and sections', () => {
-    render(<ProfilePage />, { wrapper: MemoryRouter })
+    render(<ProfilePage />, { wrapper: Wrapper })
 
     expect(screen.getByRole('heading', { name: 'Meu Perfil' })).toBeInTheDocument()
     expect(screen.getByText('mae@example.com')).toBeInTheDocument()
@@ -47,7 +57,7 @@ describe('ProfilePage', () => {
 
   it('updates preferred name successfully', async () => {
     auth.updateUser.mockResolvedValue({ data: {}, error: null })
-    render(<ProfilePage />, { wrapper: MemoryRouter })
+    render(<ProfilePage />, { wrapper: Wrapper })
 
     const input = screen.getByLabelText('Seu apelido ou nome de exibição')
     fireEvent.change(input, { target: { value: 'Mãe Querida' } })
@@ -65,7 +75,7 @@ describe('ProfilePage', () => {
   })
 
   it('validates password mismatch when updating password', async () => {
-    render(<ProfilePage />, { wrapper: MemoryRouter })
+    render(<ProfilePage />, { wrapper: Wrapper })
 
     fireEvent.change(screen.getByLabelText('Nova senha'), {
       target: { value: 'NovaSenha123' },
@@ -83,7 +93,7 @@ describe('ProfilePage', () => {
 
   it('opens confirmation modal and logs out when confirmed', async () => {
     auth.signOut.mockResolvedValue({ error: null })
-    render(<ProfilePage />, { wrapper: MemoryRouter })
+    render(<ProfilePage />, { wrapper: Wrapper })
 
     fireEvent.click(screen.getByRole('button', { name: 'Sair da conta' }))
 

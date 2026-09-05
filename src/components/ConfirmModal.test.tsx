@@ -1,10 +1,10 @@
 /* @vitest-environment jsdom */
 
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ConfirmModal } from './ConfirmModal'
+import { ConfirmModal, ConfirmProvider, useConfirm } from './ConfirmModal'
 
 afterEach(cleanup)
 
@@ -106,5 +106,90 @@ describe('ConfirmModal', () => {
 
     expect(screen.getByRole('button', { name: 'Finalizando...' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled()
+  })
+})
+
+describe('ConfirmProvider & useConfirm', () => {
+  it('throws error when used outside ConfirmProvider', () => {
+    function InvalidConsumer() {
+      useConfirm()
+      return null
+    }
+
+    expect(() => render(<InvalidConsumer />)).toThrow(
+      'useConfirm must be used within a ConfirmProvider',
+    )
+  })
+
+  it('opens modal and resolves promise when confirmed', async () => {
+    let result: boolean | null = null
+
+    function TestConsumer() {
+      const confirm = useConfirm()
+      return (
+        <button
+          type="button"
+          onClick={async () => {
+            result = await confirm({
+              title: 'Excluir Item',
+              message: 'Tem certeza?',
+              confirmText: 'Sim, deletar',
+            })
+          }}
+        >
+          Disparar
+        </button>
+      )
+    }
+
+    render(
+      <ConfirmProvider>
+        <TestConsumer />
+      </ConfirmProvider>,
+    )
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Disparar' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Excluir Item')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, deletar' }))
+    await waitFor(() => expect(result).toBe(true))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('resolves promise with false when cancelled', async () => {
+    let result: boolean | null = null
+
+    function TestConsumer() {
+      const confirm = useConfirm()
+      return (
+        <button
+          type="button"
+          onClick={async () => {
+            result = await confirm({
+              title: 'Excluir Item',
+              message: 'Tem certeza?',
+            })
+          }}
+        >
+          Disparar
+        </button>
+      )
+    }
+
+    render(
+      <ConfirmProvider>
+        <TestConsumer />
+      </ConfirmProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Disparar' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(result).toBe(false))
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

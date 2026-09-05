@@ -25,28 +25,31 @@ vi.mock('./queries', () => ({
   useUncheckAllItems: () => ({ mutateAsync: uncheckAllMutate, error: null, isPending: false, reset: vi.fn() }),
 }))
 
+import { ConfirmProvider } from '@/components/ConfirmModal'
 import { ListPage } from './ListPage'
+
+function renderListPage(initialEntries = ['/list/list-1']) {
+  return render(
+    <ConfirmProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
+      </MemoryRouter>
+    </ConfirmProvider>,
+  )
+}
 
 afterEach(cleanup)
 
 describe('ListPage', () => {
   it('puts pending items first and totals only purchased items', () => {
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     expect(screen.getAllByTestId('item-row').map((node) => node.querySelector('span')?.textContent)).toEqual(['Feijão', 'Arroz'])
     expect(screen.getAllByText(/25,00/)).toHaveLength(2)
   })
 
   it('clears and refocuses the product field after adding an item', async () => {
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
     const input = await screen.findByLabelText('Adicionar item')
 
     fireEvent.change(input, { target: { value: 'Arroz' } })
@@ -57,11 +60,7 @@ describe('ListPage', () => {
   })
 
   it('uses a direct purchase checkbox and item table headers', () => {
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     expect(screen.getByRole('columnheader', { name: 'COMPRADO' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'ITEM' })).toBeTruthy()
@@ -84,11 +83,7 @@ describe('ListPage', () => {
 
   it('opens confirmation modal and resets purchased items when clicking Desmarcar comprados', async () => {
     uncheckAllMutate.mockReset()
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     const resetBtn = screen.getByRole('button', { name: 'Desmarcar comprados' })
     expect(resetBtn).toBeInTheDocument()
@@ -103,11 +98,7 @@ describe('ListPage', () => {
 
   it('asks whether to leave items pending in a confirmation modal when finishing a list', async () => {
     archiveMutate.mockReset()
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     // Modal is initially closed
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -133,11 +124,7 @@ describe('ListPage', () => {
 
   it('allows quick quantity adjustments using stepper buttons on an item', async () => {
     updateItemMutate.mockReset()
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     const incrementBtn = screen.getByRole('button', { name: 'Aumentar quantidade de Feijão' })
     expect(incrementBtn).toBeInTheDocument()
@@ -155,11 +142,7 @@ describe('ListPage', () => {
 
   it('asks confirmation in ConfirmModal before deleting an item', async () => {
     deleteItemMutate.mockReset()
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     const deleteButtons = screen.getAllByRole('button', { name: 'Excluir' })
     fireEvent.click(deleteButtons[0])
@@ -180,11 +163,7 @@ describe('ListPage', () => {
 
   it('edits only the price of an item since quantity is managed by steppers', async () => {
     updateItemMutate.mockReset()
-    render(
-      <MemoryRouter initialEntries={['/list/list-1']}>
-        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
-      </MemoryRouter>,
-    )
+    renderListPage()
 
     // Click Editar on Feijão
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }))

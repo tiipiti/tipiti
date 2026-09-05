@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import type { z } from 'zod'
 
-import { ConfirmModal } from '@/components/ConfirmModal'
+import { useConfirm } from '@/components/ConfirmModal'
 import { supabase } from '@/lib/supabase'
 import { useSession } from './session'
 import { getUserDisplayName } from './user'
@@ -16,6 +16,7 @@ type PasswordValues = z.infer<typeof updatePasswordSchema>
 
 export function ProfilePage() {
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const { session } = useSession()
   const user = session?.user
 
@@ -30,9 +31,6 @@ export function ProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
-
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -92,15 +90,18 @@ export function ProfilePage() {
     }
   }
 
-  const onConfirmLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await supabase.auth.signOut()
-      navigate('/login')
-    } catch {
-      setIsLoggingOut(false)
-      setIsLogoutModalOpen(false)
-    }
+  const handleLogout = () => {
+    void confirm({
+      title: 'Sair da conta',
+      message: 'Tem certeza que deseja encerrar sua sessão no Tipiti neste dispositivo?',
+      confirmText: 'Sim, Sair',
+      cancelText: 'Continuar conectado',
+      variant: 'warning',
+      onConfirm: async () => {
+        await supabase.auth.signOut()
+        navigate('/login')
+      },
+    })
   }
 
   return (
@@ -323,8 +324,8 @@ export function ProfilePage() {
             </p>
             <button
               type="button"
-              className="tipiti-button tipiti-button-warning text-xs font-black"
-              onClick={() => setIsLogoutModalOpen(true)}
+              className="tipiti-button tipiti-button-warning text-xs font-black cursor-pointer"
+              onClick={handleLogout}
             >
               Sair da conta
             </button>
@@ -333,19 +334,6 @@ export function ProfilePage() {
       </div>
 
       <AppFooter />
-
-      {/* Modal Neo-brutalista de Confirmação de Logout */}
-      <ConfirmModal
-        open={isLogoutModalOpen}
-        title="Sair da conta"
-        message="Tem certeza que deseja encerrar sua sessão no Tipiti neste dispositivo?"
-        confirmText="Sim, Sair"
-        cancelText="Continuar conectado"
-        variant="warning"
-        isPending={isLoggingOut}
-        onConfirm={() => void onConfirmLogout()}
-        onCancel={() => setIsLogoutModalOpen(false)}
-      />
     </main>
   )
 }

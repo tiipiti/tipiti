@@ -9,8 +9,8 @@ import { ItemRow } from './ItemRow'
 import { PixelCoin } from './PixelIcons'
 import { useArchiveList, useCreateItem, useItems, useList, useReopenList, useUncheckAllItems } from './queries'
 import { purchasedTotal } from './total'
-import { ConfirmModal } from '@/components/ConfirmModal'
 import { ErrorPanel } from '@/components/ErrorPanel'
+import { useConfirm } from '@/components/ConfirmModal'
 import { ThemeToggle } from '@/lib/theme'
 
 const newItemSchema = z.object({ name: nameSchema })
@@ -19,6 +19,7 @@ type NewItemValues = z.infer<typeof newItemSchema>
 export function ListPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const list = useList(id)
   const items = useItems(id)
   const createItem = useCreateItem()
@@ -26,8 +27,6 @@ export function ListPage() {
   const reopen = useReopenList()
   const uncheckAll = useUncheckAllItems()
   const [retry, setRetry] = useState<(() => void) | null>(null)
-  const [confirmFinishOpen, setConfirmFinishOpen] = useState(false)
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
   const [filterQuery, setFilterQuery] = useState('')
 
   const orderedItems = useMemo(
@@ -68,20 +67,6 @@ export function ListPage() {
       setRetry(null)
     } catch {
       setRetry(() => () => void addItem({ name }))
-    }
-  }
-
-  const finish = () => {
-    setConfirmFinishOpen(true)
-  }
-
-  const onConfirmFinish = async () => {
-    try {
-      await archive.mutateAsync(id)
-      setConfirmFinishOpen(false)
-      navigate('/home')
-    } catch {
-      setRetry(() => () => void onConfirmFinish())
     }
   }
 
@@ -130,6 +115,38 @@ export function ListPage() {
         : `Ficaram ${pendingCount} itens pendentes. Vão ficar pendentes? Deseja finalizar toda a lista?`
       : 'Deseja finalizar esta compra e arquivar a lista?'
 
+  const finish = () => {
+    void confirm({
+      title: confirmTitle,
+      message: confirmMessage,
+      variant: pendingCount > 0 ? 'warning' : 'default',
+      confirmText: pendingCount > 0 ? 'Sim, finalizar toda a lista' : 'Sim, finalizar',
+      cancelText: 'Voltar para a lista',
+      onConfirm: async () => {
+        try {
+          await archive.mutateAsync(id)
+          navigate('/home')
+        } catch {
+          setRetry(() => () => void finish())
+        }
+      },
+    })
+  }
+
+  const resetPurchased = () => {
+    void confirm({
+      title: 'Desmarcar Comprados',
+      message:
+        'Deseja desmarcar todos os itens comprados para reiniciar a lista para sua próxima ida ao mercado? Os itens e preços continuarão salvos.',
+      confirmText: 'Sim, Desmarcar Todos',
+      cancelText: 'Voltar',
+      variant: 'warning',
+      onConfirm: async () => {
+        await uncheckAll.mutateAsync(id)
+      },
+    })
+  }
+
   return (
     <main className="tipiti-page pb-44">
       <header className="sticky top-0 z-30 -mx-5 border-b-4 border-black bg-[#F4F0EB] px-5 pb-3 pt-2">
@@ -162,7 +179,7 @@ export function ListPage() {
                     className="tipiti-button tipiti-button-sm tipiti-button-yellow py-2 px-3 text-xs font-bold"
                     disabled={uncheckAll.isPending}
                     type="button"
-                    onClick={() => setConfirmResetOpen(true)}
+                    onClick={resetPurchased}
                   >
                     Desmarcar comprados
                   </button>
@@ -171,7 +188,7 @@ export function ListPage() {
                   className="tipiti-button tipiti-button-warning py-2 px-3 text-xs"
                   disabled={archive.isPending}
                   type="button"
-                  onClick={() => void finish()}
+                  onClick={finish}
                 >
                   Finalizar compra
                 </button>
@@ -325,33 +342,6 @@ export function ListPage() {
           </div>
         </div>
       </footer>
-
-      <ConfirmModal
-        open={confirmFinishOpen}
-        title={confirmTitle}
-        message={confirmMessage}
-        variant={pendingCount > 0 ? 'warning' : 'default'}
-        confirmText={pendingCount > 0 ? 'Sim, finalizar toda a lista' : 'Sim, finalizar'}
-        cancelText="Voltar para a lista"
-        isPending={archive.isPending}
-        onConfirm={() => void onConfirmFinish()}
-        onCancel={() => setConfirmFinishOpen(false)}
-      />
-
-      <ConfirmModal
-        open={confirmResetOpen}
-        title="Desmarcar Comprados"
-        message="Deseja desmarcar todos os itens comprados para reiniciar a lista para sua próxima ida ao mercado? Os itens e preços continuarão salvos."
-        confirmText="Sim, Desmarcar Todos"
-        cancelText="Voltar"
-        variant="warning"
-        isPending={uncheckAll.isPending}
-        onConfirm={async () => {
-          await uncheckAll.mutateAsync(id)
-          setConfirmResetOpen(false)
-        }}
-        onCancel={() => setConfirmResetOpen(false)}
-      />
     </main>
   )
 }
