@@ -77,13 +77,15 @@ describe('LoginPage', () => {
     expect((screen.getByLabelText('Seu e-mail') as HTMLInputElement).value).toBe('ana@example.com')
   })
 
-  it('creates an account with email and password', async () => {
+  it('creates an account with name, preferred name, email and password', async () => {
     auth.signUp.mockResolvedValue({
       data: { session: { access_token: 'fake-token' }, user: { id: 'u1' } },
       error: null,
     })
     render(<LoginPage initialMode="signup" />, { wrapper: MemoryRouter })
 
+    fireEvent.change(screen.getByLabelText('Seu nome'), { target: { value: 'Ana Silva' } })
+    fireEvent.change(screen.getByLabelText(/como prefere ser chamado/i), { target: { value: 'Aninha' } })
     fireEvent.change(screen.getByLabelText('Seu e-mail'), { target: { value: 'ana@example.com' } })
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'senha123' } })
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
@@ -93,6 +95,12 @@ describe('LoginPage', () => {
         expect.objectContaining({
           email: 'ana@example.com',
           password: 'senha123',
+          options: expect.objectContaining({
+            data: expect.objectContaining({
+              full_name: 'Ana Silva',
+              preferred_name: 'Aninha',
+            }),
+          }),
         }),
       ),
     )

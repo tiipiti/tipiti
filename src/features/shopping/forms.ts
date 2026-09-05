@@ -29,6 +29,13 @@ export const passwordAuthSchema = z.object({
   password: passwordSchema,
 })
 
+export const signupSchema = z.object({
+  name: z.string().trim().min(1, 'Informe seu nome'),
+  preferred_name: z.string().trim().optional(),
+  email: z.string().trim().email('Informe um e-mail válido'),
+  password: passwordSchema,
+})
+
 export const itemSchema = z.object({
   quantity: z.preprocess(
     parseDecimal,

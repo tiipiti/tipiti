@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
+import { useSession } from '@/features/auth/session'
+import { getUserDisplayName } from '@/features/auth/user'
 import { formatCurrency, nameSchema } from './forms'
 import { ListSummary } from './ListSummary'
 import { monthDifference } from './monthly'
@@ -31,6 +33,8 @@ function LoadSkeleton() {
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { session } = useSession()
+  const displayName = getUserDisplayName(session?.user)
   const active = useActiveLists()
   const archived = useArchivedLists()
   const monthly = useMonthlyConsumption()
@@ -102,8 +106,10 @@ export function HomePage() {
     <main className="tipiti-page">
       <header className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-black">Tipiti</p>
-          <h1 className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl uppercase tracking-tight text-black">
+          <p className="text-xs font-bold uppercase tracking-wider text-black">
+            {displayName ? `Bem-vindo, ${displayName}` : 'Tipiti'}
+          </p>
+          <h1 className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
             Listas ativas
           </h1>
         </div>

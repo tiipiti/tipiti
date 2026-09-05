@@ -4,11 +4,12 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { z } from 'zod'
 
-import { emailSchema, passwordAuthSchema } from '@/features/shopping/forms'
+import { emailSchema, passwordAuthSchema, signupSchema } from '@/features/shopping/forms'
 import { supabase } from '@/lib/supabase'
 
 type EmailValues = z.infer<typeof emailSchema>
 type PasswordAuthValues = z.infer<typeof passwordAuthSchema>
+type SignupValues = z.infer<typeof signupSchema>
 type AuthMode = 'signup' | 'login' | 'magic-link'
 
 export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMode }) {
@@ -32,10 +33,16 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
     defaultValues: { email: '' },
   })
 
-  // Form for password login & signup
-  const passwordForm = useForm<PasswordAuthValues>({
+  // Form for password login
+  const loginForm = useForm<PasswordAuthValues>({
     resolver: zodResolver(passwordAuthSchema),
     defaultValues: { email: '', password: '' },
+  })
+
+  // Form for signup
+  const signupForm = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { name: '', preferred_name: '', email: '', password: '' },
   })
 
   const sendMagicLink = async (email: string) => {
@@ -67,16 +74,21 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
     if (await sendMagicLink(email)) setSentEmail(email)
   }
 
-  const onSignupSubmit = async ({ email, password }: PasswordAuthValues) => {
+  const onSignupSubmit = async (values: SignupValues) => {
     setRequestError(null)
     setSuccessMessage(null)
     setRequesting(true)
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: values.name,
+            name: values.name,
+            preferred_name: values.preferred_name?.trim() ? values.preferred_name.trim() : undefined,
+          },
         },
       })
       if (error) {
@@ -89,8 +101,8 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
       }
       setSuccessMessage('Conta criada com sucesso! Faça login com seu e-mail e senha.')
       setMode('login')
-      passwordForm.setValue('email', email)
-      passwordForm.setValue('password', '')
+      loginForm.setValue('email', values.email)
+      loginForm.setValue('password', '')
     } catch {
       setRequestError('Não foi possível criar a conta. Tente novamente.')
     } finally {
@@ -217,30 +229,73 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
         {/* CADASTRO COM SENHA */}
         {mode === 'signup' && (
           <form
-            className="mt-5 grid gap-4"
-            onSubmit={passwordForm.handleSubmit(onSignupSubmit)}
+            className="mt-5 grid gap-3"
+            onSubmit={signupForm.handleSubmit(onSignupSubmit)}
             noValidate
           >
-            <div className="grid gap-2">
+            <div className="grid gap-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="signup-name">
+                Seu nome
+              </label>
+              <input
+                id="signup-name"
+                type="text"
+                placeholder="Ex.: Maria Silva"
+                autoComplete="name"
+                className="tipiti-input"
+                aria-invalid={Boolean(signupForm.formState.errors.name)}
+                {...signupForm.register('name')}
+              />
+              {signupForm.formState.errors.name && (
+                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
+                  {signupForm.formState.errors.name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-1">
+              <label
+                className="text-xs font-bold uppercase tracking-wider text-black"
+                htmlFor="signup-preferred-name"
+              >
+                Como prefere ser chamado? (opcional)
+              </label>
+              <input
+                id="signup-preferred-name"
+                type="text"
+                placeholder="Ex.: Maria"
+                className="tipiti-input"
+                aria-invalid={Boolean(signupForm.formState.errors.preferred_name)}
+                {...signupForm.register('preferred_name')}
+              />
+              {signupForm.formState.errors.preferred_name && (
+                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
+                  {signupForm.formState.errors.preferred_name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-1">
               <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="signup-email">
                 Seu e-mail
               </label>
               <input
                 id="signup-email"
                 type="email"
+                placeholder="Ex.: maria@email.com"
                 autoComplete="email"
                 className="tipiti-input"
-                aria-invalid={Boolean(passwordForm.formState.errors.email)}
-                {...passwordForm.register('email')}
+                aria-invalid={Boolean(signupForm.formState.errors.email)}
+                {...signupForm.register('email')}
               />
-              {passwordForm.formState.errors.email && (
+              {signupForm.formState.errors.email && (
                 <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.email.message}
+                  {signupForm.formState.errors.email.message}
                 </p>
               )}
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1">
               <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="signup-password">
                 Senha
               </label>
@@ -249,12 +304,12 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 type="password"
                 autoComplete="new-password"
                 className="tipiti-input"
-                aria-invalid={Boolean(passwordForm.formState.errors.password)}
-                {...passwordForm.register('password')}
+                aria-invalid={Boolean(signupForm.formState.errors.password)}
+                {...signupForm.register('password')}
               />
-              {passwordForm.formState.errors.password && (
+              {signupForm.formState.errors.password && (
                 <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.password.message}
+                  {signupForm.formState.errors.password.message}
                 </p>
               )}
             </div>
@@ -296,7 +351,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
         {mode === 'login' && (
           <form
             className="mt-5 grid gap-4"
-            onSubmit={passwordForm.handleSubmit(onPasswordLoginSubmit)}
+            onSubmit={loginForm.handleSubmit(onPasswordLoginSubmit)}
             noValidate
           >
             <div className="grid gap-2">
@@ -308,12 +363,12 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 type="email"
                 autoComplete="email"
                 className="tipiti-input"
-                aria-invalid={Boolean(passwordForm.formState.errors.email)}
-                {...passwordForm.register('email')}
+                aria-invalid={Boolean(loginForm.formState.errors.email)}
+                {...loginForm.register('email')}
               />
-              {passwordForm.formState.errors.email && (
+              {loginForm.formState.errors.email && (
                 <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.email.message}
+                  {loginForm.formState.errors.email.message}
                 </p>
               )}
             </div>
@@ -327,12 +382,12 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 type="password"
                 autoComplete="current-password"
                 className="tipiti-input"
-                aria-invalid={Boolean(passwordForm.formState.errors.password)}
-                {...passwordForm.register('password')}
+                aria-invalid={Boolean(loginForm.formState.errors.password)}
+                {...loginForm.register('password')}
               />
-              {passwordForm.formState.errors.password && (
+              {loginForm.formState.errors.password && (
                 <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.password.message}
+                  {loginForm.formState.errors.password.message}
                 </p>
               )}
             </div>
