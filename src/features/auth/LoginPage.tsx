@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 
 import { emailSchema } from '@/features/shopping/forms'
 import { supabase } from '@/lib/supabase'
@@ -8,8 +9,10 @@ import { supabase } from '@/lib/supabase'
 type LoginValues = { email: string }
 
 export function LoginPage() {
+  const navigate = useNavigate()
   const [sent, setSent] = useState(false)
   const [requestError, setRequestError] = useState<string | null>(null)
+  const [anonymousPending, setAnonymousPending] = useState(false)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginValues>({
     resolver: zodResolver(emailSchema),
   })
@@ -22,6 +25,15 @@ export function LoginPage() {
     })
     if (error) return setRequestError(error.message)
     setSent(true)
+  }
+
+  const enterForTesting = async () => {
+    setRequestError(null)
+    setAnonymousPending(true)
+    const { error } = await supabase.auth.signInAnonymously()
+    setAnonymousPending(false)
+    if (error) return setRequestError(error.message)
+    navigate('/home')
   }
 
   return (
@@ -40,6 +52,9 @@ export function LoginPage() {
             {requestError && <p className="text-sm text-red-700" role="alert">{requestError}</p>}
             <button className="rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white transition hover:bg-emerald-800 active:scale-[0.98] disabled:opacity-60" disabled={isSubmitting} type="submit">
               {isSubmitting ? 'Enviando...' : 'Enviar Magic Link'}
+            </button>
+            <button className="rounded-xl border border-zinc-300 px-4 py-3 font-medium active:scale-[0.98] disabled:opacity-60" disabled={anonymousPending} type="button" onClick={() => void enterForTesting()}>
+              {anonymousPending ? 'Entrando...' : 'Entrar para teste'}
             </button>
           </form>
         )}
