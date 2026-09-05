@@ -75,31 +75,53 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         }`}
         data-testid="item-row"
       >
+        <td className="p-3 align-middle text-center w-16">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={item.is_purchased}
+            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
+            disabled={readOnly || toggle.isPending}
+            onClick={() => void toggleItem()}
+            className={`inline-flex h-8 w-8 items-center justify-center border-[3px] border-black transition-all cursor-pointer ${
+              item.is_purchased
+                ? 'bg-[#39FF14] shadow-[2px_2px_0_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+                : 'bg-white shadow-[3px_3px_0_#000000] hover:bg-[#39FF14]/20 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+            }`}
+          >
+            {item.is_purchased ? <PixelCheck width={18} height={18} /> : null}
+          </button>
+        </td>
         <td className="p-3 align-middle">
-          <span className={`font-bold uppercase text-black ${item.is_purchased ? 'line-through' : ''}`}>
-            {item.name}
-          </span>
-          {!readOnly && (
-            <div className="mt-2 flex gap-2 text-xs font-bold uppercase">
-              {!item.is_purchased && (
+          <div className="flex flex-col">
+            <span className={`font-bold uppercase text-black break-words ${item.is_purchased ? 'line-through' : ''}`}>
+              {item.name}
+            </span>
+            <span className="text-xs font-bold text-black/60 tabular-nums">
+              Subtotal: {formatCurrency(item.quantity * item.price)}
+            </span>
+            {!readOnly && (
+              <div className="mt-2 flex gap-2 text-xs font-bold uppercase">
+                {!item.is_purchased && (
+                  <button
+                    className="tipiti-button tipiti-button-sm tipiti-button-secondary cursor-pointer"
+                    type="button"
+                    onClick={() => setEditing((value) => !value)}
+                  >
+                    Editar
+                  </button>
+                )}
                 <button
-                  className="tipiti-button tipiti-button-sm tipiti-button-secondary cursor-pointer"
+                  className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
+                  disabled={remove.isPending}
                   type="button"
-                  onClick={() => setEditing((value) => !value)}
+                  onClick={() => setConfirmDeleteOpen(true)}
                 >
-                  Editar
+                  Excluir
                 </button>
-              )}
-              <button
-                className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
-                disabled={remove.isPending}
-                type="button"
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
-                Excluir
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </td>
         <td className="p-3 align-middle text-sm font-bold text-black tabular-nums">
           {readOnly || item.is_purchased ? (
@@ -131,23 +153,6 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           )}
         </td>
         <td className="p-3 align-middle text-sm font-bold text-black tabular-nums">{formatCurrency(item.price)}</td>
-        <td className="p-3 align-middle text-center">
-          <button
-            type="button"
-            role="checkbox"
-            aria-checked={item.is_purchased}
-            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
-            disabled={readOnly || toggle.isPending}
-            onClick={() => void toggleItem()}
-            className={`inline-flex h-8 w-8 items-center justify-center border-[3px] border-black transition-all cursor-pointer ${
-              item.is_purchased
-                ? 'bg-[#39FF14] shadow-[2px_2px_0_#000000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
-                : 'bg-white shadow-[3px_3px_0_#000000] hover:bg-[#39FF14]/20 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
-            }`}
-          >
-            {item.is_purchased ? <PixelCheck width={18} height={18} /> : null}
-          </button>
-        </td>
       </tr>
 
       {editing && !readOnly && !item.is_purchased && (

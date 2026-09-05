@@ -38,7 +38,7 @@ describe('ListPage', () => {
     )
 
     expect(screen.getAllByTestId('item-row').map((node) => node.querySelector('span')?.textContent)).toEqual(['Feijão', 'Arroz'])
-    expect(screen.getByText(/25,00/)).toBeTruthy()
+    expect(screen.getAllByText(/25,00/)).toHaveLength(2)
   })
 
   it('clears and refocuses the product field after adding an item', async () => {
@@ -63,10 +63,11 @@ describe('ListPage', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByRole('columnheader', { name: 'COMPRADO' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'ITEM' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'QTD' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'PREÇO' })).toBeTruthy()
-    expect(screen.getByRole('columnheader', { name: 'STATUS' })).toBeTruthy()
+    expect(screen.getAllByText(/Subtotal:/)).toHaveLength(2)
 
     // Unpurchased item (Feijão) has checkbox unchecked and has Editar button
     const beansCheckbox = screen.getByRole('checkbox', { name: 'Marcar Feijão como comprado' })

@@ -288,10 +288,10 @@ export function ListPage() {
           <table className="tipiti-table">
             <thead>
               <tr>
+                <th className="w-16 text-center">COMPRADO</th>
                 <th>ITEM</th>
                 <th>QTD</th>
                 <th>PREÇO</th>
-                <th className="text-center">STATUS</th>
               </tr>
             </thead>
             <tbody>
