@@ -156,7 +156,7 @@ export function HomePage() {
                     ➔ Ver dashboard completo
                   </span>
                 </div>
-                <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black">
+                <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black tabular-nums">
                   {formatCurrency(currentTotal)}
                 </p>
               </div>

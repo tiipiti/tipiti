@@ -79,7 +79,7 @@ export function ListSummary({ list, history = false }: { list: List; history?: b
           >
             <h2 className="truncate font-bold uppercase tracking-tight text-lg text-black">{list.name}</h2>
             {history && (
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-black">
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-black tabular-nums">
                 {items.isLoading
                   ? 'Calculando total...'
                   : formatCurrency(purchasedTotal(items.data ?? []))}{' '}

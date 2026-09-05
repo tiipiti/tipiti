@@ -101,7 +101,7 @@ export function DashboardSection() {
                 </span>
                 <PixelCoin width={20} height={20} />
               </div>
-              <p className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase text-black">
+              <p className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase text-black tabular-nums">
                 {formatCurrency(stats?.totalSpent ?? 0)}
               </p>
               <p className="mt-1 text-[10px] font-bold uppercase text-black/80">
@@ -116,7 +116,7 @@ export function DashboardSection() {
                 </span>
                 <PixelCart width={20} height={20} />
               </div>
-              <p className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase text-black">
+              <p className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase text-black tabular-nums">
                 {formatCurrency(stats?.averagePerMonth ?? 0)}
               </p>
               <p className="mt-1 text-[10px] font-bold uppercase text-black/80">

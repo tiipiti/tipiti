@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
@@ -26,6 +26,21 @@ export function ListPage() {
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const [confirmFinishOpen, setConfirmFinishOpen] = useState(false)
   const [confirmResetOpen, setConfirmResetOpen] = useState(false)
+  const [filterQuery, setFilterQuery] = useState('')
+
+  const orderedItems = useMemo(
+    () =>
+      [...(items.data ?? [])].sort(
+        (a, b) => Number(a.is_purchased) - Number(b.is_purchased),
+      ),
+    [items.data],
+  )
+  const filteredItems = useMemo(() => {
+    if (!filterQuery.trim()) return orderedItems
+    const q = filterQuery.toLowerCase().trim()
+    return orderedItems.filter((i) => i.name.toLowerCase().includes(q))
+  }, [orderedItems, filterQuery])
+
   const inputRef = useRef<HTMLInputElement | null>(null)
   const {
     register,
@@ -100,9 +115,7 @@ export function ListPage() {
     )
   }
 
-  const orderedItems = [...(items.data ?? [])].sort(
-    (a, b) => Number(a.is_purchased) - Number(b.is_purchased),
-  )
+  const allPurchased = orderedItems.length > 0 && orderedItems.every((item) => item.is_purchased)
   const total = purchasedTotal(items.data ?? [])
   const readOnly = list.data.is_archived
   const pendingCount = (items.data ?? []).filter((item) => !item.is_purchased).length
@@ -210,9 +223,65 @@ export function ListPage() {
         </div>
       )}
 
+      {allPurchased && !readOnly && (
+        <div className="tipiti-panel tipiti-panel-green mt-6 flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+          <div>
+            <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">
+              ★ CARRINHO CHEIO!
+            </p>
+            <p className="text-xs font-bold uppercase text-black mt-0.5">
+              Todos os itens foram marcados como comprados. Pronto para passar no caixa!
+            </p>
+          </div>
+          <button
+            type="button"
+            className="tipiti-button tipiti-button-warning text-xs font-bold py-2 px-3 shrink-0 cursor-pointer"
+            disabled={archive.isPending}
+            onClick={() => void finish()}
+          >
+            Finalizar compra agora
+          </button>
+        </div>
+      )}
+
+      {orderedItems.length > 3 && (
+        <div className="mt-4 flex items-center gap-2 border-4 border-black bg-white p-2">
+          <span className="tipiti-pixel text-xs font-bold uppercase text-black pl-1">
+            BUSCA:
+          </span>
+          <input
+            type="text"
+            className="flex-1 bg-transparent text-xs font-bold text-black outline-none placeholder:text-black/50"
+            placeholder="Filtrar produtos na lista..."
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+          />
+          {filterQuery && (
+            <button
+              type="button"
+              onClick={() => setFilterQuery('')}
+              className="tipiti-button tipiti-button-sm py-1 px-2 text-xs font-bold"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+      )}
+
       {!orderedItems.length ? (
         <div className="tipiti-panel mt-8 text-center font-bold uppercase text-black">
           <p>Nenhum item nesta lista.</p>
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="tipiti-panel mt-8 text-center font-bold uppercase text-black">
+          <p>Nenhum produto encontrado com "{filterQuery}".</p>
+          <button
+            type="button"
+            onClick={() => setFilterQuery('')}
+            className="tipiti-button tipiti-button-sm mt-3"
+          >
+            Limpar busca
+          </button>
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto border-4 border-black bg-[#F4F0EB]">
@@ -226,7 +295,7 @@ export function ListPage() {
               </tr>
             </thead>
             <tbody>
-              {orderedItems.map((item) => (
+              {filteredItems.map((item) => (
                 <ItemRow key={item.id} item={item} readOnly={readOnly} />
               ))}
             </tbody>
@@ -235,7 +304,11 @@ export function ListPage() {
       )}
 
       {/* Solid ink bottom bar, NO backdrop-blur */}
-      <footer className="fixed inset-x-0 bottom-0 border-t-4 border-black bg-[#F4F0EB] p-4">
+      <footer
+        className="fixed inset-x-0 bottom-0 border-t-4 border-black bg-[#F4F0EB] p-4"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <div className="mx-auto flex max-w-xl items-center justify-between">
           <div className="flex items-center gap-2">
             <PixelCoin width={24} height={24} />
@@ -243,7 +316,7 @@ export function ListPage() {
               No carrinho
             </span>
           </div>
-          <strong className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black text-black">
+          <strong className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black text-black tabular-nums">
             {formatCurrency(total)}
           </strong>
         </div>

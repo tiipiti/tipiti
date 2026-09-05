@@ -2,6 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Fragment, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { triggerHaptic } from '@/lib/haptic'
 import { formatCurrency, itemSchema } from './forms'
 import { PixelCheck } from './PixelIcons'
 import { useDeleteItem, useToggleItem, useUpdateItem } from './queries'
@@ -9,6 +11,7 @@ import type { Item } from './types'
 
 export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
   const [editing, setEditing] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const toggle = useToggleItem()
   const update = useUpdateItem()
@@ -23,11 +26,24 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
   })
 
   const toggleItem = async () => {
+    triggerHaptic(item.is_purchased ? 15 : 35)
     try {
       await toggle.mutateAsync({ id: item.id, listId: item.list_id, is_purchased: !item.is_purchased })
       setRetry(null)
     } catch {
       setRetry(() => () => void toggleItem())
+    }
+  }
+
+  const adjustQuantity = async (delta: number) => {
+    const newQty = Math.max(1, Math.min(99999, Math.round((item.quantity + delta) * 100) / 100))
+    if (newQty === item.quantity) return
+    triggerHaptic(20)
+    try {
+      await update.mutateAsync({ id: item.id, listId: item.list_id, quantity: newQty, price: item.price })
+      setRetry(null)
+    } catch {
+      setRetry(() => () => void adjustQuantity(delta))
     }
   }
 
@@ -75,18 +91,48 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                 className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
                 disabled={remove.isPending}
                 type="button"
-                onClick={() => void deleteCurrentItem()}
+                onClick={() => setConfirmDeleteOpen(true)}
               >
                 Excluir
               </button>
             </div>
           )}
         </td>
-        <td className="p-3 align-top text-sm font-bold text-black">{item.quantity}</td>
-        <td className="p-3 align-top text-sm font-bold text-black">{formatCurrency(item.price)}</td>
+        <td className="p-3 align-top text-sm font-bold text-black tabular-nums">
+          {readOnly ? (
+            item.quantity
+          ) : (
+            <div className="inline-flex items-center gap-1 border-2 border-black bg-[#F4F0EB] p-0.5">
+              <button
+                type="button"
+                disabled={update.isPending || item.quantity <= 1}
+                className="flex h-6 w-6 items-center justify-center border border-black bg-white text-xs font-black transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                aria-label={`Diminuir quantidade de ${item.name}`}
+                onClick={() => void adjustQuantity(-1)}
+              >
+                -
+              </button>
+              <span className="min-w-[1.5rem] text-center font-bold tabular-nums">
+                {item.quantity}
+              </span>
+              <button
+                type="button"
+                disabled={update.isPending || item.quantity >= 99999}
+                className="flex h-6 w-6 items-center justify-center border border-black bg-white text-xs font-black transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                aria-label={`Aumentar quantidade de ${item.name}`}
+                onClick={() => void adjustQuantity(1)}
+              >
+                +
+              </button>
+            </div>
+          )}
+        </td>
+        <td className="p-3 align-top text-sm font-bold text-black tabular-nums">{formatCurrency(item.price)}</td>
         <td className="p-3 align-top">
           <button
-            className={`tipiti-status ${item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-white'}`}
+            className={`tipiti-status transition-transform active:translate-x-1 active:translate-y-1 ${
+              item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-white hover:bg-[#39FF14]/20'
+            }`}
             aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
             aria-pressed={item.is_purchased}
             disabled={readOnly || toggle.isPending}
@@ -190,6 +236,21 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
           </td>
         </tr>
       )}
+
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Excluir Item"
+        message={`Deseja remover "${item.name}" da lista? Esta ação não pode ser desfeita.`}
+        variant="danger"
+        confirmText="Sim, Excluir"
+        cancelText="Voltar"
+        isPending={remove.isPending}
+        onConfirm={async () => {
+          await deleteCurrentItem()
+          setConfirmDeleteOpen(false)
+        }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </Fragment>
   )
 }
