@@ -53,5 +53,7 @@ describe('HomePage', () => {
     expect(await screen.findByRole('heading', { name: 'Consumo do mês' })).toBeInTheDocument()
     expect(screen.getByText(/120,00/)).toBeInTheDocument()
     expect(screen.getByText(/40,00 a mais que agosto/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /ver dashboard de consumo por mês/i })).toHaveAttribute('href', '/dashboard')
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard')
   })
 })

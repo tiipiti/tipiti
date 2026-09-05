@@ -8,6 +8,7 @@ import { useSession } from '@/features/auth/session'
 import { HistoryPage } from '@/features/shopping/HistoryPage'
 import { HomePage } from '@/features/shopping/HomePage'
 import { ListPage } from '@/features/shopping/ListPage'
+import { DashboardPage } from '@/features/shopping/DashboardPage'
 
 function PrivatePage({ children }: { children: ReactNode }) {
   const { loading, session } = useSession()
@@ -23,6 +24,7 @@ function App() {
       <Route path="/auth/callback" element={<CallbackPage />} />
       <Route path="/home" element={<PrivatePage><HomePage /></PrivatePage>} />
       <Route path="/history" element={<PrivatePage><HistoryPage /></PrivatePage>} />
+      <Route path="/dashboard" element={<PrivatePage><DashboardPage /></PrivatePage>} />
       <Route path="/list/:id" element={<PrivatePage><ListPage /></PrivatePage>} />
       <Route path="*" element={<Navigate replace to="/login" />} />
     </Routes>

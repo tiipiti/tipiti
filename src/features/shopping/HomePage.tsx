@@ -114,6 +114,9 @@ export function HomePage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/dashboard" className="tipiti-button py-2 text-xs">
+            Dashboard
+          </Link>
           <Link to="/history" className="tipiti-button py-2 text-xs">
             Histórico
           </Link>
@@ -134,12 +137,21 @@ export function HomePage() {
       {monthly.isLoading ? (
         <div className="tipiti-skeleton mt-6 h-28" />
       ) : monthly.data ? (
-        <section className="tipiti-panel tipiti-panel-yellow tipiti-panel-action mt-6">
+        <Link
+          to="/dashboard"
+          className="tipiti-panel tipiti-panel-yellow tipiti-panel-action mt-6 block cursor-pointer transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
+          aria-label="Ver dashboard de consumo por mês"
+        >
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-black">
-                Consumo do mês
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+                  Consumo do mês
+                </h2>
+                <span className="bg-black px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#F4F0EB]">
+                  Ver dashboard →
+                </span>
+              </div>
               <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black">
                 {formatCurrency(currentTotal)}
               </p>
@@ -152,7 +164,7 @@ export function HomePage() {
             </p>
             <p className="mt-0.5">{diffText}</p>
           </div>
-        </section>
+        </Link>
       ) : null}
 
       {creating && (

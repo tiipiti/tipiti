@@ -15,9 +15,14 @@ export function HistoryPage() {
             Histórico
           </h1>
         </div>
-        <Link className="tipiti-button py-2 text-xs" to="/home">
-          Listas ativas
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link className="tipiti-button py-2 text-xs" to="/dashboard">
+            Dashboard
+          </Link>
+          <Link className="tipiti-button py-2 text-xs" to="/home">
+            Listas ativas
+          </Link>
+        </div>
       </header>
 
       {history.isLoading && (
