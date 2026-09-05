@@ -24,16 +24,22 @@ export const emailSchema = z.object({
 
 export const passwordSchema = z.string().min(6, 'A senha deve ter no mínimo 6 caracteres')
 
+export const strongPasswordSchema = z
+  .string()
+  .min(8, 'A senha deve ter no mínimo 8 caracteres')
+  .regex(/[a-zA-Z]/, 'A senha deve conter pelo menos uma letra')
+  .regex(/[0-9]/, 'A senha deve conter pelo menos um número')
+
 export const passwordAuthSchema = z.object({
   email: z.string().trim().email('Informe um e-mail válido'),
-  password: passwordSchema,
+  password: z.string().min(1, 'Informe sua senha'),
 })
 
 export const signupSchema = z.object({
   name: z.string().trim().min(1, 'Informe seu nome'),
   preferred_name: z.string().trim().optional(),
   email: z.string().trim().email('Informe um e-mail válido'),
-  password: passwordSchema,
+  password: strongPasswordSchema,
 })
 
 export const itemSchema = z.object({

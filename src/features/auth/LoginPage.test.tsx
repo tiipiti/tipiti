@@ -1,5 +1,6 @@
 /* @vitest-environment jsdom */
 
+import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -125,5 +126,37 @@ describe('LoginPage', () => {
         }),
       ),
     )
+  })
+
+  it('toggles password visibility', () => {
+    render(<LoginPage initialMode="signup" />, { wrapper: MemoryRouter })
+    const passwordInput = screen.getByLabelText('Senha')
+    expect(passwordInput).toHaveAttribute('type', 'password')
+
+    const toggleButton = screen.getByRole('button', { name: 'Mostrar senha' })
+    fireEvent.click(toggleButton)
+    expect(passwordInput).toHaveAttribute('type', 'text')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar senha' }))
+    expect(passwordInput).toHaveAttribute('type', 'password')
+  })
+
+  it('validates strong password with length, letter and number during signup', async () => {
+    render(<LoginPage initialMode="signup" />, { wrapper: MemoryRouter })
+
+    fireEvent.change(screen.getByLabelText('Seu nome'), { target: { value: 'Ana Silva' } })
+    fireEvent.change(screen.getByLabelText('Seu e-mail'), { target: { value: 'ana@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'short' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+
+    expect(await screen.findByText('A senha deve ter no mínimo 8 caracteres')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'onlyletters' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+    expect(await screen.findByText('A senha deve conter pelo menos um número')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '12345678' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+    expect(await screen.findByText('A senha deve conter pelo menos uma letra')).toBeInTheDocument()
   })
 })
