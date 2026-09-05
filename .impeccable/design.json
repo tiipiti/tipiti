@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-05T12:00:00-04:00",
+  "title": "Design System: Tipiti",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Papel de Mercado", "canonical": "#F4F0EB", "tonalRamp": ["#211F1D", "#4D4944", "#77716A", "#A49C93", "#D6D0C8", "#E8E2DC", "#F4F0EB", "#FFFDF9"] },
+      "ink": { "role": "neutral", "displayName": "Tinta Preta", "canonical": "#000000", "tonalRamp": ["#000000", "#1F1F1F", "#3D3D3D", "#5C5C5C", "#808080", "#A6A6A6", "#D1D1D1", "#F2F2F2"] },
+      "neon-green": { "role": "primary", "displayName": "Verde de Confirmacao", "canonical": "#39FF14", "tonalRamp": ["#0B3603", "#126707", "#1D980B", "#29C810", "#39FF14", "#72FF57", "#ACFF94", "#E2FFDA"] },
+      "electric-yellow": { "role": "secondary", "displayName": "Amarelo de Atencao", "canonical": "#FFFF00", "tonalRamp": ["#393900", "#6B6B00", "#9D9D00", "#CFCF00", "#FFFF00", "#FFFF57", "#FFFF99", "#FFFFD9"] },
+      "safety-orange": { "role": "tertiary", "displayName": "Laranja de Acao", "canonical": "#FF5F1F", "tonalRamp": ["#421400", "#762500", "#AA3806", "#D94A13", "#FF5F1F", "#FF9065", "#FFC0A7", "#FFE6D8"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Manchete de Encarte", "purpose": "Titulos e totais financeiros." },
+      "body": { "displayName": "Registro de Compra", "purpose": "Produtos, precos e dados." }
+    },
+    "shadows": [
+      { "name": "carimbo-ativo", "value": "6px 6px 0 #000000", "purpose": "Acoes e resumos." },
+      { "name": "carimbo-pressionado", "value": "0 0 0 #000000", "purpose": "Estado ativo de botao." }
+    ],
+    "motion": [
+      { "name": "press", "value": "transform 120ms ease-out", "purpose": "Botao afunda no toque." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "0px" },
+      { "name": "tablet", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botao de confirmacao",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acao principal de compra.",
+      "html": "<button class=\"ds-btn-primary\">SALVAR ITEM</button>",
+      "css": ".ds-btn-primary { background:#39FF14; color:#000000; border:4px solid #000000; border-radius:0; box-shadow:6px 6px 0 #000000; padding:12px 16px; font:700 14px 'Courier New',monospace; } .ds-btn-primary:hover,.ds-btn-primary:focus-visible { outline:4px solid #000000; outline-offset:3px; } .ds-btn-primary:active { box-shadow:0 0 0 #000000; transform:translate(6px,6px); }"
+    },
+    {
+      "name": "Campo de item",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Entrada de produto e valores.",
+      "html": "<label class=\"ds-label\">ITEM<input class=\"ds-input\" value=\"ARROZ\"></label>",
+      "css": ".ds-label { display:grid; gap:8px; color:#000000; font:700 12px 'Courier New',monospace; letter-spacing:.08em; } .ds-input { background:#F4F0EB; color:#000000; border:4px solid #000000; border-radius:0; padding:12px; font:700 16px 'Courier New',monospace; } .ds-input:focus-visible { outline:4px solid #000000; outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Manual de Mercado de Fliperama",
+    "overview": "Tipiti combina uma folha de controle de compra impressa com a energia de um fliperama de bairro. Informacao de compra ocupa o espaco e evita telas vazias.",
+    "keyCharacteristics": ["Bordas pretas grossas", "Pixel art funcional", "Estado comprado explicito", "Financeiro em leitura rapida"],
+    "rules": [{ "name": "The Ink Rule", "body": "Todo contêiner, campo e botão tem borda preta sólida de 4px.", "section": "colors" }, { "name": "The Hard Shadow Rule", "body": "Blur é proibido.", "section": "elevation" }],
+    "dos": ["Do usar borda preta de 4px.", "Do pedir nome da lista.", "Do comunicar compra por texto, icone e risco."],
+    "donts": ["Don't usar cartões SaaS genéricos.", "Don't usar gradientes ou sombras difusas.", "Don't usar ícones modernos de biblioteca."]
+  }
+}
