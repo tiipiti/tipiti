@@ -59,157 +59,140 @@ components:
 
 Tipiti parece uma folha de controle de compra impressa, marcada à mão e
 transformada em tela de fliperama de bairro. É um produto doméstico, usado no
-celular enquanto se planeja o mês ou se empurra o carrinho. A tela deve ocupar
-o espaço com informação útil: lista atual, itens pendentes, itens comprados e
-consumo mensal, sem o vazio de um dashboard SaaS.
+celular enquanto se planeja o mês ou se empurra o carrinho no supermercado. A tela ocupa
+o espaço com informação útil: lista atual, itens pendentes, itens comprados,
+linha do tempo e consumo mensal, sem o vazio estéril de um dashboard SaaS.
 
-O sistema rejeita cartões macios, transparência, gradientes, sombras nebulosas,
-ícones de biblioteca modernos e interfaces que parecem uma planilha sem
-hierarquia. Cada área é uma caixa ou linha de tabela deliberada, com tinta
+O sistema rejeita terminantemente cantos arredondados, transparências, gradientes, sombras nebulosas,
+ícones de bibliotecas modernas (como Lucide, FontAwesome ou Heroicons), emojis e interfaces que parecem uma planilha sem
+hierarquia. Cada elemento é uma caixa ou linha deliberada, com tinta
 preta, blocos de cor chapada e resposta física ao toque.
 
 **Key Characteristics:**
 
-- Bordas pretas grossas e grades retas, nunca contornos sutis.
-- Informação financeira em blocos de leitura rápida, não em cards genéricos.
-- Pixel art funcional para compra, moeda e carrinho.
-- Estado comprado explícito por texto, ícone e risco, nunca apenas por cor.
+- Bordas pretas grossas (4px sólida) e grades retas (`border-radius: 0px` absoluto).
+- Informação financeira e resumos em blocos de leitura rápida (painéis destacados).
+- Pixel art funcional para compra, moeda, carrinho e checagem.
+- Estado comprado explícito por texto, ícone, fundo cinza e risco, nunca apenas por cor.
+- Modais e diálogos customizados em neo-brutalismo (sem usar `window.confirm` ou alertas nativos do navegador).
+
+---
 
 ## Colors
 
 A paleta é limitada, impressa e de contraste agressivo. Cor é sempre estado ou
-ação, nunca enfeite.
+ação, nunca mero enfeite.
 
 ### Primary
-
-- **Verde de confirmação:** usado em criar, salvar, marcar como comprado e no
-  total de compra concluída.
+- **Verde de confirmação (`#39FF14`):** usado em botões de salvar, criar lista, adicionar item, marcar como comprado e no total de compra concluída.
 
 ### Secondary
-
-- **Amarelo de atenção:** usado para consumo mensal e avisos que pedem leitura.
+- **Amarelo de atenção (`#FFFF00`):** usado para o banner de consumo mensal, avisos importantes e barras de histórico do mês atual.
 
 ### Tertiary
-
-- **Laranja de ação irreversível:** usado para finalizar compra e excluir item.
+- **Laranja de ação irreversível (`#FF5F1F`):** usado para finalizar compra, excluir item/lista e botões de perigo em modais.
 
 ### Neutral
+- **Papel de mercado (`#F4F0EB`):** fundo de página, inputs e superfícies neutras de leitura.
+- **Tinta preta (`#000000`):** tipografia, bordas estruturais de 4px, divisórias, sombras rígidas e contornos de foco.
+- **Cinza comprado (`#D6D0C8`):** fundo de linha finalizada, combinado com rótulo textual e risco.
 
-- **Papel de mercado:** fundo de página, inputs e superfícies de leitura.
-- **Tinta preta:** texto, borda, divisória, sombra rígida e foco.
-- **Cinza comprado:** fundo de linha finalizada, combinado com rótulo textual.
+> **The Ink Rule:** Todo contêiner, campo, painel e botão tem borda preta sólida de 4px (`border: 4px solid #000000`). Não existe borda cinza, translúcida ou com menos de 3px. `border-radius: 0px` em tudo.
 
-**The Ink Rule.** Todo contêiner, campo e botão tem borda preta sólida de 4px.
-Não existe borda cinza, transparente ou com menos de 3px.
+---
 
 ## Typography
 
-**Display Font:** Impact ou Arial Black.
-**Body Font:** Courier New.
-**Label/Mono Font:** Courier New.
+- **Display Font:** `Impact, Arial Black, sans-serif`
+- **Body Font:** `Courier New, monospace`
+- **Label/Mono Font:** `Courier New, monospace`
 
-**Character:** títulos e dinheiro gritam como cabeçalhos de encarte; produtos,
-quantidades e datas parecem saída de terminal. Somente títulos e totais usam a
-fonte pesada.
+**Character:** Títulos e dinheiro gritam como cabeçalhos de encarte promocional de mercado; produtos, quantidades, status e datas parecem saída de cupom fiscal em terminal. Somente títulos principais e totais financeiros usam a fonte display pesada.
 
 ### Hierarchy
+- **Display** (900, 32px, 0.95): títulos de página e totais mensais/da lista. Sempre em caixa alta.
+- **Headline** (900, 24px, 1.0): cabeçalhos de seção (ex: `LISTA ATUAL`, `CONSUMO DO MÊS`).
+- **Title** (700, 18px, 1.1): nomes de listas e itens no formulário.
+- **Body** (700, 16px, 1.35): produto, preço, quantidade, botões e mensagens informativas.
+- **Label** (700, 12px, 0.08em, maiúsculas): títulos de coluna, tags e rótulos de campos.
 
-- **Display** (900, 32px, 0.95): título da lista e total mensal, sempre em
-  caixa alta.
-- **Headline** (900, 24px, 1): cabeçalhos de seção, como LISTA ATUAL.
-- **Title** (700, 18px, 1.1): nome de item ou lista.
-- **Body** (700, 16px, 1.35): produto, preço, quantidade e mensagens.
-- **Label** (700, 12px, 0.08em, maiúsculas): títulos de coluna e campos.
+> **The Receipt Rule:** Dados de compra, inputs e tabelas usam monoespaçada (`Courier New`). Não usar fontes decorativas ou display em campos ou dados de tabelas.
 
-**The Receipt Rule.** Dados de compra usam monoespaçada. Não usar display em
-botões, campos ou linhas da tabela.
+---
 
-## Elevation
+## Elevation & Motion
 
-Não há sombra suave. Profundidade é uma impressão deslocada: o elemento parece
-ter sido carimbado sobre o papel.
+Não há sombras suaves nem `blur`. Profundidade é representada como uma impressão deslocada: o elemento parece ter sido carimbado sobre o papel.
 
 ### Shadow Vocabulary
+- **Carimbo ativo em repouso:** `box-shadow: 6px 6px 0 #000000` (ou `4px 4px 0 #000000` em itens menores).
+- **Carimbo pressionado (`:active`):** `box-shadow: 0 0 0 #000000; transform: translate(6px, 6px);` (o elemento afunda no exato espaço de sua sombra).
+- **Transição:** Rápida e mecânica (`transition: transform 100ms ease-out, box-shadow 100ms ease-out`).
 
-- **Carimbo ativo** (`box-shadow: 6px 6px 0 #000000`): botões e painéis de
-  resumo em repouso.
-- **Carimbo pressionado** (`box-shadow: 0 0 0 #000000; transform: translate(6px, 6px)`):
-  estado `:active`.
+> **The Hard Shadow Rule:** Sombras com desfoque (`blur`) são estritamente proibidas. Se uma sombra tiver gradiente ou difusão, ela viola o design system.
 
-**The Hard Shadow Rule.** `blur` é proibido. Se uma sombra parecer macia, ela
-está errada.
+---
 
-## Components
+## Components & Patterns
 
-### Buttons
+### 1. Botões
+- **Formato:** Retângulo rígido (`rounded-none`), borda preta de 4px e sombra rígida.
+- **Primário:** Verde de confirmação (`#39FF14`), texto preto, altura mínima de 44px.
+- **Perigo/Warning:** Laranja de segurança (`#FF5F1F`), texto preto, para finalizações e exclusões.
+- **Secundário/Neutro:** Fundo amarelo (`#FFFF00`) ou papel (`#F4F0EB`) com borda preta.
+- **Toque:** Ao clicar/pressionar, desloca 6px para baixo e para a direita, eliminando a sombra.
 
-- **Shape:** retângulo quadrado (0px), borda preta de 4px e sombra rígida.
-- **Primary:** verde de confirmação, texto preto, mínimo de 44px de altura.
-- **Warning:** laranja de segurança para finalizar e excluir, sempre com texto
-  explícito da consequência.
-- **Hover / Focus:** sem brilho; foco é contorno preto deslocado. No toque, o
-  botão ocupa a posição da própria sombra.
+### 2. Painéis e Containers
+- Fundo papel (`#F4F0EB`), amarelo (`#FFFF00`) ou verde (`#39FF14`) dependendo do propósito semântico.
+- Borda preta de 4px e sombra rígida de 6px quando o container representar uma ação ou resumo financeiro.
+- `rounded-none` (0px) em todos os cantos.
 
-### Cards / Containers
+### 3. Inputs e Formulários
+- Fundo papel (`#F4F0EB`), borda de 4px preta, tipografia mono (`Courier New`) e altura mínima de 48px.
+- **Foco visível:** `outline: 4px solid #000000; outline-offset: 3px;` sem halo azul ou sombras suaves.
+- **Limites de Entrada Rígidos:**
+  - Nome de lista / produto: Máximo de 100 caracteres.
+  - Apelido / Nickname: Máximo de 50 caracteres.
+  - E-mail: Máximo de 254 caracteres.
+  - Senha: Máximo de 72 caracteres.
+  - Quantidade: Máximo de 99.999 (com suporte a decimais para peso/kg).
+  - Preço unitário: Máximo de R$ 999.999,99.
 
-- **Corner Style:** quadrado (0px).
-- **Background:** papel para leitura, amarelo para consumo mensal, verde para
-  totais concluídos.
-- **Shadow Strategy:** somente sombra rígida de 6px quando a caixa for uma
-  ação ou resumo financeiro.
-- **Border:** preto sólido de 4px.
-- **Internal Padding:** 20px em mobile, 28px em painéis de resumo.
+### 4. Modais de Confirmação (`ConfirmModal`)
+- É expressamente proibido usar `window.confirm` ou `window.alert` nativos do browser.
+- Todo diálogo crítico de confirmação (como finalizar compra ou excluir item) utiliza o componente neo-brutalista com:
+  - Overlay escuro semi-sólido (`bg-black/60`).
+  - Caixa central com borda de 4px preta, sombra rígida de 8px e fundo papel/amarelo/laranja.
+  - Botão de confirmação em laranja `#FF5F1F` ou verde `#39FF14` e botão de cancelamento neutro.
 
-### Inputs / Fields
+### 5. Gráficos & Linha do Tempo (`Recharts`)
+- O consumo mensal expansível no Dashboard utiliza gráficos estilizados sob o neo-brutalismo:
+  - Barras com contorno preto grosso de 3px a 4px e `radius={0}`.
+  - Fundo amarelo elétrico `#FFFF00` para meses anteriores e laranja `#FF5F1F` para o mês corrente.
+  - Grade e eixos desenhados com linha preta pura `#000000`.
+  - Tooltips customizados no formato de etiqueta impressa: caixa branca/papel com borda preta de 4px e sombra rígida.
 
-- **Style:** papel, borda preta de 4px, tipografia mono e altura mínima de
-  48px.
-- **Focus:** contorno preto de 4px com deslocamento externo, sem `ring` suave.
-- **Error / Disabled:** erro usa laranja e texto; desabilitado mantém borda e
-  reduz apenas a saturação, não a legibilidade.
+### 6. Pixel Art & Ícones
+- Ícones de interface (carrinho, moeda, check de comprado, lixeira) devem ser SVGs pixelados nativos com `shape-rendering="crispEdges"`.
+- Máximo de 2 a 3 cores chapadas por ícone.
+- Não utilizar bibliotecas externas de ícones vetoriais modernos (Lucide, Heroicons, Material Icons) nem emojis em elementos de interface.
 
-### Navigation
-
-- **Style:** faixa superior de 4px, links mono sublinhados e uma área de
-  retorno sempre no topo esquerdo.
-- **Mobile:** uma coluna. O dashboard mensal fica antes da lista e as ações
-  permanecem visíveis sem menu oculto.
-
-### Lista e dashboard mensal
-
-- **Nome da lista:** ao criar, pedir o nome antes de abrir a compra. Não criar
-  outra lista chamada “Nova lista” sem confirmação. O título fica no cabeçalho
-  de forma editável.
-- **Dashboard mensal:** no topo da Home, um painel amarelo mostra `CONSUMO DO
-  MÊS`, a soma de listas finalizadas no mês atual e o número de compras
-  concluídas. Sem orçamento definido, não inventar meta ou porcentagem.
-- **Tabela de itens:** cabeçalho fixo com `ITEM`, `QTD`, `PREÇO` e `STATUS`.
-  Divisórias pretas de 3px separam cada linha.
-- **Compra concluída:** caixa pixelada e texto `COMPRADO`; linha recebe cinza,
-  nome riscado e continua acessível por contraste e texto.
-- **Pixel art:** carrinho, moeda e marca de comprado são SVGs 8-bit próprios,
-  com pixels grandes, `shape-rendering: crispEdges` e no máximo três cores.
-  Não usar Lucide, Material Icons ou emoji.
+---
 
 ## Do's and Don'ts
 
 ### Do:
-
-- **Do** usar papel, tinta preta, verde, amarelo e laranja nas funções
-  documentadas, com borda preta de 4px.
-- **Do** mostrar consumo mensal como total de listas finalizadas, antes do
-  histórico detalhado.
-- **Do** pedir e exibir nome da lista de forma permanente.
-- **Do** comunicar item comprado com texto, ícone pixelado, risco e cor.
-- **Do** respeitar teclado, foco visível e `prefers-reduced-motion`.
+- **Do** manter borda preta sólida de 4px em botões, campos e painéis.
+- **Do** manter `border-radius: 0px` absoluto em toda a aplicação.
+- **Do** exibir total da compra no cabeçalho ou rodapé fixo de forma imediata durante o uso.
+- **Do** comunicar item comprado de 4 formas simultâneas: texto `COMPRADO`, ícone pixelado, risco no nome e fundo cinza.
+- **Do** usar o componente `ConfirmModal` para ações destrutivas ou definitivas.
+- **Do** garantir navegação por teclado e foco visível em todos os controles.
 
 ### Don't:
-
-- **Don't** usar cartões SaaS genéricos, telas minimalistas vazias ou uma
-  planilha sem hierarquia.
-- **Don't** usar superfícies translúcidas, `backdrop-blur`, gradientes ou
-  sombras difusas.
-- **Don't** usar bordas arredondadas suaves, bordas cinza ou raio acima de 0px.
-- **Don't** usar ícones modernos de biblioteca, emoji ou pixel art com
-  anti-aliasing.
-- **Don't** indicar compra somente com verde ou somente com texto riscado.
+- **Don't** usar cantos arredondados (`rounded-md`, `rounded-full`, etc.).
+- **Don't** usar sombras com blur (`box-shadow: 0 4px 6px rgba(...)`).
+- **Don't** usar gradientes, transparências de vidro (`backdrop-blur`) ou cartões SaaS minimalistas.
+- **Don't** usar `window.confirm()` ou diálogos nativos do sistema operacional.
+- **Don't** importar ícones vetoriais genéricos ou usar emojis coloridos nos fluxos de compra.
+- **Don't** indicar o status de comprado apenas com cor verde.
