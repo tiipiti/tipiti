@@ -67,7 +67,7 @@ describe('DashboardPage', () => {
     })
   })
 
-  it('renders dashboard title and KPIs', () => {
+  it('renders dashboard title, timeline and KPIs', () => {
     render(<DashboardPage />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('heading', { name: 'Consumo por mês' })).toBeInTheDocument()
@@ -75,23 +75,25 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Média mensal')).toBeInTheDocument()
     expect(screen.getByText(/450,00/)).toBeInTheDocument()
     expect(screen.getByText(/225,00/)).toBeInTheDocument()
-    expect(screen.getByText('Histórico de Gastos (R$)')).toBeInTheDocument()
+    expect(screen.getByText('Linha do Tempo')).toBeInTheDocument()
+    expect(screen.getByText('Comparativo de Gastos por Mês')).toBeInTheDocument()
   })
 
-  it('renders month-by-month breakdown list', () => {
+  it('renders timeline with month details', () => {
     render(<DashboardPage />, { wrapper: MemoryRouter })
 
     expect(screen.getByText('Setembro de 2026')).toBeInTheDocument()
     expect(screen.getByText('Agosto de 2026')).toBeInTheDocument()
     expect(screen.getByText(/300,00/)).toBeInTheDocument()
     expect(screen.getByText(/150,00/)).toBeInTheDocument()
-    expect(screen.getByText(/3 compras finalizadas • 12 itens/)).toBeInTheDocument()
+    expect(screen.getByText(/3 LISTAS FINALIZADAS/)).toBeInTheDocument()
+    expect(screen.getByText(/12 ITENS COMPRADOS/)).toBeInTheDocument()
   })
 
   it('switches time range between 6 and 12 months', () => {
     render(<DashboardPage />, { wrapper: MemoryRouter })
 
-    const button12 = screen.getByRole('button', { name: '12 meses' })
+    const button12 = screen.getByRole('button', { name: '12 Meses' })
     fireEvent.click(button12)
 
     expect(mockHistoryQuery).toHaveBeenCalledWith(12)

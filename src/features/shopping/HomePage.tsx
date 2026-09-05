@@ -10,6 +10,7 @@ import { formatCurrency, nameSchema } from './forms'
 import { ListSummary } from './ListSummary'
 import { monthDifference } from './monthly'
 import { PixelCart, PixelCoin } from './PixelIcons'
+import { DashboardSection } from './DashboardSection'
 import {
   useActiveLists,
   useArchivedLists,
@@ -41,6 +42,7 @@ export function HomePage() {
   const create = useCreateList()
   const clone = useCloneLatestArchivedList()
   const [creating, setCreating] = useState(false)
+  const [dashboardExpanded, setDashboardExpanded] = useState(false)
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const {
     register,
@@ -137,34 +139,48 @@ export function HomePage() {
       {monthly.isLoading ? (
         <div className="tipiti-skeleton mt-6 h-28" />
       ) : monthly.data ? (
-        <Link
-          to="/dashboard"
-          className="tipiti-panel tipiti-panel-yellow tipiti-panel-action mt-6 block cursor-pointer transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
-          aria-label="Ver dashboard de consumo por mês"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-black">
-                  Consumo do mês
-                </h2>
-                <span className="bg-black px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#F4F0EB]">
-                  Ver dashboard →
-                </span>
+        <div className="mt-6">
+          <button
+            type="button"
+            className="tipiti-panel tipiti-panel-yellow tipiti-panel-action w-full text-left cursor-pointer transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
+            aria-label="Ver dashboard de consumo por mês"
+            onClick={() => setDashboardExpanded((prev) => !prev)}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+                    Consumo do mês
+                  </h2>
+                  <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#F4F0EB]">
+                    {dashboardExpanded ? '▲ Recolher dashboard' : '▼ Ver linha do tempo e gastos'}
+                  </span>
+                </div>
+                <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black">
+                  {formatCurrency(currentTotal)}
+                </p>
               </div>
-              <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black">
-                {formatCurrency(currentTotal)}
-              </p>
+              <PixelCoin width={32} height={32} />
             </div>
-            <PixelCoin width={32} height={32} />
-          </div>
-          <div className="mt-3 border-t-2 border-black pt-2 text-xs font-bold uppercase tracking-wide text-black">
-            <p>
-              {currentPurchases} {currentPurchases === 1 ? 'COMPRA FINALIZADA' : 'COMPRAS FINALIZADAS'}
-            </p>
-            <p className="mt-0.5">{diffText}</p>
-          </div>
-        </Link>
+            <div className="mt-3 border-t-2 border-black pt-2 text-xs font-bold uppercase tracking-wide text-black flex items-center justify-between">
+              <div>
+                <p>
+                  {currentPurchases} {currentPurchases === 1 ? 'COMPRA FINALIZADA' : 'COMPRAS FINALIZADAS'}
+                </p>
+                <p className="mt-0.5">{diffText}</p>
+              </div>
+              <span className="underline text-[11px] font-bold">
+                {dashboardExpanded ? 'Recolher' : 'Abrir linha do tempo'}
+              </span>
+            </div>
+          </button>
+
+          {dashboardExpanded && (
+            <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-150">
+              <DashboardSection />
+            </div>
+          )}
+        </div>
       ) : null}
 
       {creating && (
@@ -249,7 +265,7 @@ export function HomePage() {
             type="button"
             onClick={() => void cloneList()}
           >
-            Copiar última compra
+            {clone.isPending ? 'Copiando...' : `Copiar última compra (${archived.data[0].name})`}
           </button>
         </div>
       ) : null}

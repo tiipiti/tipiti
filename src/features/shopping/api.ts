@@ -31,7 +31,8 @@ export const getArchivedLists = async () => {
     .from('lists')
     .select(listColumns)
     .eq('is_archived', true)
-    .order('archived_at', { ascending: false })
+    .order('archived_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
   throwIfError(error)
   return (data ?? []) as List[]
 }
@@ -41,7 +42,8 @@ export const getArchivedListsWithItems = async () => {
     .from('lists')
     .select(`${listColumns}, items(${itemColumns})`)
     .eq('is_archived', true)
-    .order('archived_at', { ascending: false })
+    .order('archived_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
   throwIfError(error)
   return (data ?? []) as ArchivedListWithItems[]
 }
@@ -126,11 +128,12 @@ export const cloneItemPayloads = (
 ) => items.map(({ name, quantity, price }) => ({ list_id, name, quantity, price, is_purchased: false }))
 
 export const cloneLatestArchivedList = async () => {
-  const latest = (await getArchivedLists())[0]
+  const archived = await getArchivedListsWithItems()
+  const latest = archived.find((l) => l.items && l.items.length > 0) ?? archived[0]
   if (!latest) return null
 
   const copy = await createList(latest.name)
-  const items = await getItems(latest.id)
+  const items = latest.items ?? []
   if (!items.length) return copy
 
   const { error } = await supabase.from('items').insert(cloneItemPayloads(copy.id, items))

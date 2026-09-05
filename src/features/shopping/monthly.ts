@@ -14,6 +14,14 @@ export const monthlyConsumption = (lists: ArchivedListWithItems[], month: Date) 
 
 export const monthDifference = (current: number, previous: number) => current - previous
 
+export interface MonthListSummary {
+  id: string
+  name: string
+  total: number
+  itemsCount: number
+  archivedAt: string
+}
+
 export interface MonthSpending {
   monthKey: string
   label: string
@@ -24,6 +32,7 @@ export interface MonthSpending {
   total: number
   purchases: number
   itemsCount: number
+  lists: MonthListSummary[]
 }
 
 export const getMonthlyHistory = (
@@ -63,6 +72,14 @@ export const getMonthlyHistory = (
     const fullMonth = rawFullMonth.charAt(0).toUpperCase() + rawFullMonth.slice(1)
     const fullLabel = `${fullMonth} de ${year}`
 
+    const monthLists: MonthListSummary[] = included.map((list) => ({
+      id: list.id,
+      name: list.name,
+      total: purchasedTotal(list.items),
+      itemsCount: list.items?.filter((item) => item.is_purchased)?.length ?? 0,
+      archivedAt: list.archived_at ?? list.created_at,
+    }))
+
     result.push({
       monthKey,
       label,
@@ -73,6 +90,7 @@ export const getMonthlyHistory = (
       total,
       purchases,
       itemsCount,
+      lists: monthLists,
     })
   }
 
