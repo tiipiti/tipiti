@@ -94,14 +94,25 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
         },
       })
       if (error) {
-        setRequestError(error.message)
+        setRequestError(
+          error.message.toLowerCase().includes('user already registered')
+            ? 'Este e-mail já está cadastrado. Acesse a aba "Acessar" para entrar.'
+            : error.message,
+        )
+        return
+      }
+      // Supabase returns an empty identities array when email is already registered (enumeration protection)
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setRequestError('Este e-mail já está cadastrado. Acesse a aba "Acessar" para entrar.')
         return
       }
       if (data.session) {
         navigate('/home')
         return
       }
-      setSuccessMessage('Conta criada com sucesso! Faça login com seu e-mail e senha.')
+      setSuccessMessage(
+        'Conta criada! Como a confirmação está ativa no Supabase, confirme o link no seu e-mail para entrar (ou desative "Confirm email" no painel do Supabase para login direto sem confirmação).',
+      )
       setMode('login')
       loginForm.setValue('email', values.email)
       loginForm.setValue('password', '')
@@ -121,11 +132,14 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
         password,
       })
       if (error) {
-        setRequestError(
-          error.message.toLowerCase().includes('invalid login credentials')
-            ? 'E-mail ou senha incorretos.'
-            : error.message,
-        )
+        const msg = error.message.toLowerCase()
+        if (msg.includes('invalid login credentials')) {
+          setRequestError('E-mail ou senha incorretos.')
+        } else if (msg.includes('email not confirmed')) {
+          setRequestError('E-mail ainda não confirmado. Verifique seu e-mail ou desative "Confirm email" nas configurações do Supabase.')
+        } else {
+          setRequestError(error.message)
+        }
         return
       }
       if (data.session) {

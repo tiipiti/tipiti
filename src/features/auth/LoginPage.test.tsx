@@ -172,4 +172,33 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText('Seu e-mail')).toHaveAttribute('maxLength', '254')
     expect(screen.getByLabelText('Senha')).toHaveAttribute('maxLength', '72')
   })
+
+  it('warns when email is already registered during signup', async () => {
+    auth.signUp.mockResolvedValue({
+      data: { user: { id: 'u1', identities: [] }, session: null },
+      error: null,
+    })
+    render(<LoginPage initialMode="signup" />, { wrapper: MemoryRouter })
+
+    fireEvent.change(screen.getByLabelText('Seu nome'), { target: { value: 'Ana Silva' } })
+    fireEvent.change(screen.getByLabelText('Seu e-mail'), { target: { value: 'ana@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'senha123' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+
+    expect(await screen.findByText('Este e-mail já está cadastrado. Acesse a aba "Acessar" para entrar.')).toBeInTheDocument()
+  })
+
+  it('translates email not confirmed error on login', async () => {
+    auth.signInWithPassword.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Email not confirmed' },
+    })
+    render(<LoginPage initialMode="login" />, { wrapper: MemoryRouter })
+
+    fireEvent.change(screen.getByLabelText('Seu e-mail'), { target: { value: 'ana@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'senha123' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    expect(await screen.findByText(/E-mail ainda não confirmado/i)).toBeInTheDocument()
+  })
 })
