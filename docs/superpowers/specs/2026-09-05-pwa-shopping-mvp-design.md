@@ -12,9 +12,23 @@ O cliente é React com Vite, React Router e `vite-plugin-pwa`, hospedado na
 Vercel. Ele acessa Supabase diretamente pela chave publishable pública;
 TanStack Query faz as leituras e invalida o cache após mutações.
 
+Formulários usam React Hook Form, Zod e `zodResolver`: Magic Link valida
+e-mail; renomear lista e criar item exigem texto não vazio após `trim`; editar
+item valida quantidade decimal e preço em reais não negativos. Preço digitado
+com vírgula é convertido para número antes de gravar.
+
 Não há backend próprio, cálculo de total no banco ou suporte a mutações offline.
 A PWA cacheia apenas os arquivos da interface para instalação e carregamento do
 app shell; toda escrita exige conexão com o Supabase.
+
+## Interface
+
+A interface é mobile-first, usa Geist e Tailwind, com base neutra e uma única
+cor de destaque. Rótulos ficam acima dos inputs, ajuda opcional aparece no
+markup e erros ficam abaixo do campo. Skeletons, estados vazios, erros inline,
+foco visível e feedback tátil em ações são obrigatórios. Não usar emojis,
+animação contínua ou dependência de animação: transições CSS curtas de
+`transform` e `opacity` bastam para este fluxo de compra.
 
 ## Autenticação e rotas
 
