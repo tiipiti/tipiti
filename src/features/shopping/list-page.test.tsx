@@ -63,4 +63,19 @@ describe('ListPage', () => {
     expect(screen.getByRole('button', { name: 'Marcar Feijão como comprado' }).getAttribute('aria-pressed')).toBe('false')
     expect(screen.getByText('PENDENTE')).toBeTruthy()
   })
+
+  it('asks whether to leave items pending when finishing a list with pending items', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(
+      <MemoryRouter initialEntries={['/list/list-1']}>
+        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar compra' }))
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/pendente/i),
+    )
+    confirmSpy.mockRestore()
+  })
 })

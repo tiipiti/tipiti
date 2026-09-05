@@ -63,16 +63,16 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
             {item.name}
           </span>
           {!readOnly && (
-            <div className="mt-1 flex gap-3 text-xs font-bold uppercase">
+            <div className="mt-2 flex gap-2 text-xs font-bold uppercase">
               <button
-                className="cursor-pointer underline text-black"
+                className="tipiti-button tipiti-button-sm tipiti-button-secondary cursor-pointer"
                 type="button"
                 onClick={() => setEditing((value) => !value)}
               >
                 Editar
               </button>
               <button
-                className="cursor-pointer underline text-[#FF5F1F]"
+                className="tipiti-button tipiti-button-sm tipiti-button-warning cursor-pointer"
                 disabled={remove.isPending}
                 type="button"
                 onClick={() => void deleteCurrentItem()}
@@ -86,14 +86,21 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         <td className="p-3 align-top text-sm font-bold text-black">{formatCurrency(item.price)}</td>
         <td className="p-3 align-top">
           <button
-            className={`tipiti-status ${item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-[#F4F0EB]'}`}
+            className={`tipiti-status ${item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-white'}`}
             aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'pendente' : 'comprado'}`}
             aria-pressed={item.is_purchased}
             disabled={readOnly || toggle.isPending}
             type="button"
             onClick={() => void toggleItem()}
           >
-            {item.is_purchased ? <PixelCheck width={14} height={14} /> : null}
+            {item.is_purchased ? (
+              <PixelCheck width={14} height={14} />
+            ) : (
+              <span
+                className="inline-block h-3.5 w-3.5 border-2 border-black bg-white"
+                aria-hidden="true"
+              />
+            )}
             <span>{item.is_purchased ? 'COMPRADO' : 'PENDENTE'}</span>
           </button>
         </td>
@@ -168,7 +175,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         <tr className="border-b-[3px] border-black bg-[#FF5F1F]/20">
           <td className="p-3" colSpan={4}>
             <button
-              className="text-xs font-bold uppercase underline text-black"
+              className="text-xs font-bold uppercase underline text-black cursor-pointer"
               type="button"
               onClick={retry}
             >

@@ -8,8 +8,8 @@
   --color-safety-orange: #FF5F1F;
   --color-bought-gray: #D6D0C8;
 
-  --font-display: Impact, "Arial Black", sans-serif;
-  --font-mono: "Courier New", Courier, monospace;
+  --font-display: 'Anton', Impact, "Arial Black", sans-serif;
+  --font-mono: 'Courier Prime', "Courier New", Courier, monospace;
 }
 
 :root {
@@ -21,12 +21,44 @@
   --bought-gray: #D6D0C8;
 }
 
-body {
+html,
+body,
+#root {
   margin: 0;
   background-color: #F4F0EB;
   color: #000000;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Headings and heavy display typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.tipiti-display {
+  font-family: 'Anton', Impact, "Arial Black", sans-serif !important;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+/* Base text elements default to monospace receipt style */
+p,
+span,
+div,
+label,
+input,
+button,
+table,
+th,
+td,
+a {
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
 }
 
 /* Tipiti visual primitives */
@@ -38,7 +70,7 @@ body {
   background-color: #F4F0EB;
   color: #000000;
   padding: 1.25rem;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
 }
 
 .tipiti-panel {
@@ -46,7 +78,7 @@ body {
   border: 4px solid #000000;
   border-radius: 0;
   padding: 1.25rem;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
 }
 
 .tipiti-panel-action {
@@ -65,6 +97,7 @@ body {
   background-color: #FF5F1F;
 }
 
+/* Physical tactile button primitives */
 .tipiti-button {
   display: inline-flex;
   align-items: center;
@@ -72,7 +105,7 @@ body {
   gap: 0.5rem;
   min-height: 44px;
   padding: 12px 16px;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -81,26 +114,31 @@ body {
   color: #000000;
   border: 4px solid #000000;
   border-radius: 0;
-  box-shadow: 6px 6px 0 #000000;
+  box-shadow: 4px 4px 0 #000000;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  user-select: none;
+  transition: transform 100ms ease, box-shadow 100ms ease;
 }
 
 .tipiti-button:hover,
 .tipiti-button:focus-visible {
   outline: 4px solid #000000;
   outline-offset: 3px;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000000;
 }
 
 .tipiti-button:active:not(:disabled) {
   box-shadow: 0 0 0 #000000;
-  transform: translate(6px, 6px);
+  transform: translate(4px, 4px);
 }
 
 .tipiti-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 4px 4px 0 #000000;
 }
 
 .tipiti-button-primary {
@@ -118,6 +156,31 @@ body {
   color: #000000;
 }
 
+.tipiti-button-secondary {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+/* Compact micro-button */
+.tipiti-button-sm {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+.tipiti-button-sm:hover,
+.tipiti-button-sm:focus-visible {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.tipiti-button-sm:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 #000000;
+}
+
 .tipiti-input {
   min-height: 48px;
   background-color: #F4F0EB;
@@ -125,7 +188,7 @@ body {
   border: 4px solid #000000;
   border-radius: 0;
   padding: 12px;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
   font-size: 16px;
   font-weight: 700;
   width: 100%;
@@ -140,11 +203,11 @@ body {
 .tipiti-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
 }
 
 .tipiti-table th {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -165,31 +228,34 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   padding: 6px 12px;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier Prime', "Courier New", Courier, monospace;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  border: 4px solid #000000;
+  border: 3px solid #000000;
   border-radius: 0;
-  min-height: 44px;
-  background-color: #F4F0EB;
+  min-height: 38px;
+  background-color: #FFFFFF;
   color: #000000;
   cursor: pointer;
-  box-shadow: 4px 4px 0 #000000;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  box-shadow: 3px 3px 0 #000000;
+  user-select: none;
+  transition: transform 100ms ease, box-shadow 100ms ease;
 }
 
 .tipiti-status:hover,
 .tipiti-status:focus-visible {
-  outline: 4px solid #000000;
-  outline-offset: 3px;
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #000000;
 }
 
 .tipiti-status:active:not(:disabled) {
   box-shadow: 0 0 0 #000000;
-  transform: translate(4px, 4px);
+  transform: translate(3px, 3px);
 }
 
 .tipiti-status[aria-pressed="true"] {

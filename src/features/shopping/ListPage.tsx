@@ -51,7 +51,17 @@ export function ListPage() {
   }
 
   const finish = async () => {
-    if (!window.confirm('Finalizar esta compra?')) return
+    const pendingCount = (items.data ?? []).filter((item) => !item.is_purchased).length
+    if (pendingCount > 0) {
+      const message =
+        pendingCount === 1
+          ? 'Ficou 1 item pendente. Vai ficar pendente? Deseja finalizar toda a lista?'
+          : `Ficaram ${pendingCount} itens pendentes. Vão ficar pendentes? Deseja finalizar toda a lista?`
+      if (!window.confirm(message)) return
+    } else {
+      if (!window.confirm('Finalizar esta compra?')) return
+    }
+
     try {
       await archive.mutateAsync(id)
       navigate('/home')
@@ -81,7 +91,7 @@ export function ListPage() {
     return (
       <main className="grid min-h-[100dvh] place-items-center bg-[#F4F0EB] p-5">
         <section className="tipiti-panel text-center">
-          <h1 className="font-['Impact','Arial_Black',sans-serif] text-2xl uppercase tracking-tight text-black">
+          <h1 className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black uppercase tracking-tight text-black">
             Lista não encontrada
           </h1>
           <Link className="tipiti-button mt-4" to="/home">
@@ -101,21 +111,21 @@ export function ListPage() {
   return (
     <main className="tipiti-page pb-32">
       <header className="border-b-4 border-black pb-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <Link
-              className="text-xs font-bold uppercase tracking-wider text-black underline"
+              className="tipiti-button tipiti-button-sm tipiti-button-secondary"
               to={readOnly ? '/history' : '/home'}
             >
-              Voltar
+              &lt; VOLTAR
             </Link>
-            <h1 className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl uppercase tracking-tight text-black">
+            <h1 className="mt-2 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
               {list.data.name}
             </h1>
           </div>
           {readOnly ? (
             <button
-              className="tipiti-button tipiti-button-primary py-2 text-xs"
+              className="tipiti-button tipiti-button-primary py-2 px-3 text-xs"
               disabled={reopen.isPending}
               type="button"
               onClick={() => void reopenCurrentList()}
@@ -124,7 +134,7 @@ export function ListPage() {
             </button>
           ) : (
             <button
-              className="tipiti-button tipiti-button-warning py-2 text-xs"
+              className="tipiti-button tipiti-button-warning py-2 px-3 text-xs"
               disabled={archive.isPending}
               type="button"
               onClick={() => void finish()}
@@ -146,7 +156,7 @@ export function ListPage() {
           <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="new-item">
             Adicionar item
           </label>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               id="new-item"
               className="tipiti-input flex-1"
@@ -156,7 +166,7 @@ export function ListPage() {
               ref={setMergedInputRef}
             />
             <button
-              className="tipiti-button tipiti-button-primary"
+              className="tipiti-button tipiti-button-primary shrink-0 sm:self-stretch"
               disabled={createItem.isPending}
               type="submit"
             >
@@ -172,7 +182,7 @@ export function ListPage() {
       {retry && (
         <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
           <p className="font-bold">Não foi possível salvar a alteração.</p>
-          <button className="mt-2 font-bold underline" type="button" onClick={retry}>
+          <button className="mt-2 font-bold underline cursor-pointer" type="button" onClick={retry}>
             Tentar novamente
           </button>
         </div>
@@ -211,7 +221,7 @@ export function ListPage() {
               No carrinho
             </span>
           </div>
-          <strong className="font-['Impact','Arial_Black',sans-serif] text-2xl font-black text-black">
+          <strong className="font-['Anton',Impact,'Arial_Black',sans-serif] text-2xl font-black text-black">
             {formatCurrency(total)}
           </strong>
         </div>
