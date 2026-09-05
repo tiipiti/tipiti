@@ -148,13 +148,13 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
                   Gastos e listas organizados mês a mês
                 </p>
               </div>
-              <span className="bg-[#FFFF00] border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase text-black shadow-[2px_2px_0_#000]">
+              <span className="tipiti-badge-yellow bg-[#FFFF00] border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase text-black shadow-[2px_2px_0_#000]">
                 {history.length} MESES
               </span>
             </div>
 
             {/* Container da linha com eixo vertical */}
-            <div className="relative pl-6 space-y-6 before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-1 before:bg-black">
+            <div className="tipiti-timeline-container relative pl-6 space-y-6 before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-1 before:bg-black">
               {[...history].reverse().map((month) => {
                 const isCurrentMonth = month.monthKey === currentMonthKey
                 const isMaxMonth = stats?.maxMonth?.monthKey === month.monthKey && month.total > 0
@@ -164,7 +164,7 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
                   <div key={month.monthKey} className="relative group">
                     {/* Nó da linha do tempo */}
                     <div
-                      className={`absolute -left-[23px] top-4 h-5 w-5 border-4 border-black transition-transform group-hover:scale-110 ${
+                      className={`tipiti-timeline-node absolute -left-[23px] top-4 h-5 w-5 border-4 border-black transition-transform group-hover:scale-110 ${
                         isCurrentMonth
                           ? 'bg-[#39FF14]'
                           : isMaxMonth
@@ -187,12 +187,12 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
                             {month.fullLabel}
                           </span>
                           {isCurrentMonth && (
-                            <span className="bg-[#39FF14] border-2 border-black px-1.5 py-0.2 text-[9px] font-black uppercase text-black">
+                            <span className="tipiti-badge-green bg-[#39FF14] border-2 border-black px-1.5 py-0.2 text-[9px] font-black uppercase text-black">
                               Mês atual
                             </span>
                           )}
                           {isMaxMonth && (
-                            <span className="bg-[#FF5F1F] border-2 border-black px-1.5 py-0.2 text-[9px] font-black uppercase text-black">
+                            <span className="tipiti-badge-orange bg-[#FF5F1F] border-2 border-black px-1.5 py-0.2 text-[9px] font-black uppercase text-black">
                               Pico
                             </span>
                           )}
@@ -214,9 +214,9 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
                       </div>
 
                       {/* Barra visual percentual */}
-                      <div className="mt-2 h-3 w-full border-2 border-black bg-[#D6D0C8] p-[1px]">
+                      <div className="tipiti-progress-track mt-2 h-3 w-full border-2 border-black bg-[#D6D0C8] p-[1px]">
                         <div
-                          className="h-full bg-black transition-all"
+                          className="tipiti-progress-fill h-full bg-black transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -231,7 +231,7 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
                             {month.lists.map((list) => (
                               <div
                                 key={list.id}
-                                className="flex items-center justify-between text-xs font-bold uppercase text-black bg-[#E8E2DC] px-2 py-1 border border-black"
+                                className="tipiti-timeline-list-item flex items-center justify-between text-xs font-bold uppercase text-black bg-[#E8E2DC] px-2 py-1 border border-black"
                               >
                                 <span className="truncate max-w-[200px]">{list.name}</span>
                                 <span className="font-mono">{formatCurrency(list.total)}</span>

@@ -3,9 +3,9 @@
 @theme {
   --color-paper: #F4F0EB;
   --color-ink: #000000;
-  --color-neon-green: #39FF14;
-  --color-electric-yellow: #FFFF00;
-  --color-safety-orange: #FF5F1F;
+  --color-neon-green: #22C55E;
+  --color-electric-yellow: #FFD000;
+  --color-safety-orange: #FF5722;
   --color-bought-gray: #D6D0C8;
 
   --font-display: 'Anton', Impact, "Arial Black", sans-serif;
@@ -17,9 +17,9 @@
   --paper: #F4F0EB;
   --ink: #000000;
   --icon-stroke: #000000;
-  --neon-green: #39FF14;
-  --electric-yellow: #FFFF00;
-  --safety-orange: #FF5F1F;
+  --neon-green: #22C55E;
+  --electric-yellow: #FFD000;
+  --safety-orange: #FF5722;
   --bought-gray: #D6D0C8;
 }
 
@@ -94,15 +94,15 @@ a {
 }
 
 .tipiti-panel-yellow {
-  background-color: #FFFF00;
+  background-color: var(--electric-yellow);
 }
 
 .tipiti-panel-green {
-  background-color: #39FF14;
+  background-color: var(--neon-green);
 }
 
 .tipiti-panel-orange {
-  background-color: #FF5F1F;
+  background-color: var(--safety-orange);
 }
 
 /* Physical tactile button primitives */
@@ -150,17 +150,17 @@ a {
 }
 
 .tipiti-button-primary {
-  background-color: #39FF14;
+  background-color: var(--neon-green);
   color: #000000;
 }
 
 .tipiti-button-warning {
-  background-color: #FF5F1F;
+  background-color: var(--safety-orange);
   color: #000000;
 }
 
 .tipiti-button-yellow {
-  background-color: #FFFF00;
+  background-color: var(--electric-yellow);
   color: #000000;
 }
 
@@ -650,6 +650,56 @@ html.dark .bg-\[\#FFFF00\] {
   background-color: #E5A93C !important;
 }
 
+/* Badges with light/vibrant backgrounds MUST retain dark ink text in both modes */
+html.dark .tipiti-badge-yellow,
+html.dark .tipiti-badge-green,
+html.dark .tipiti-badge-orange,
+html.dark .bg-\[\#39FF14\],
+html.dark .bg-\[\#FFFF00\],
+html.dark .bg-\[\#FF5F1F\] {
+  color: #0A0A0C !important;
+}
+
+html.dark .tipiti-badge-yellow *,
+html.dark .tipiti-badge-green *,
+html.dark .tipiti-badge-orange *,
+html.dark .bg-\[\#39FF14\] *,
+html.dark .bg-\[\#FFFF00\] *,
+html.dark .bg-\[\#FF5F1F\] * {
+  color: #0A0A0C !important;
+}
+
+/* Timeline specific styles in dark mode */
+html.dark .tipiti-timeline-container::before,
+html.dark .before\:bg-black::before {
+  background-color: #454754 !important;
+}
+
+html.dark .tipiti-timeline-node {
+  border-color: #D8D3CA !important;
+}
+
+html.dark .tipiti-progress-track {
+  background-color: #121316 !important;
+  border-color: #D8D3CA !important;
+}
+
+html.dark .tipiti-progress-fill {
+  background-color: #22C55E !important;
+}
+
+html.dark .tipiti-timeline-list-item,
+html.dark .bg-\[\#E8E2DC\] {
+  background-color: #22232A !important;
+  border-color: #383944 !important;
+  color: #F4F0EB !important;
+}
+
+html.dark .tipiti-timeline-list-item *,
+html.dark .bg-\[\#E8E2DC\] * {
+  color: #F4F0EB !important;
+}
+
 /* Charts in dark mode */
 html.dark .recharts-cartesian-grid line {
   stroke: #2E303B !important;
@@ -678,4 +728,25 @@ html.dark [data-slot="chart-tooltip"] {
   border-color: #D8D3CA !important;
   color: #F4F0EB !important;
   box-shadow: 4px 4px 0 #000000 !important;
+}
+
+/* Light mode utility redirects for Color Theory harmony */
+.bg-\[\#39FF14\] {
+  background-color: var(--neon-green);
+}
+
+.bg-\[\#FFFF00\] {
+  background-color: var(--electric-yellow);
+}
+
+.bg-\[\#FF5F1F\] {
+  background-color: var(--safety-orange);
+}
+
+.text-\[\#FF5F1F\] {
+  color: var(--safety-orange);
+}
+
+.hover\:bg-\[\#39FF14\]\/20:hover {
+  background-color: rgba(34, 197, 94, 0.2);
 }
