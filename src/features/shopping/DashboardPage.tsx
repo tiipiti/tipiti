@@ -3,34 +3,23 @@ import { Link } from 'react-router-dom'
 
 import { DashboardSection } from './DashboardSection'
 import { AppFooter } from '@/components/AppFooter'
+import { PageHeader } from '@/components/PageHeader'
 
 export function DashboardPage() {
   const [monthsRange, setMonthsRange] = useState<6 | 12>(6)
 
   return (
     <main className="tipiti-page pb-12">
-      <header className="border-b-4 border-black pb-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">Tipiti</p>
-            <span className="bg-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-[#F4F0EB]">
-              Dashboard
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/history" className="tipiti-button py-2 text-xs">
-              Histórico
-            </Link>
-            <Link to="/home" className="tipiti-button py-2 text-xs">
-              ← Início
-            </Link>
-          </div>
-        </div>
-
-        <h1 className="mt-2 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
-          Consumo por mês
-        </h1>
-
+      <PageHeader
+        title="Consumo por mês"
+        badge="Dashboard"
+        actions={
+          <>
+            <Link to="/history" className="tipiti-button py-2 text-xs">Histórico</Link>
+            <Link to="/home" className="tipiti-button py-2 text-xs">← Início</Link>
+          </>
+        }
+      >
         <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
@@ -51,7 +40,7 @@ export function DashboardPage() {
             12 Meses
           </button>
         </div>
-      </header>
+      </PageHeader>
 
       <DashboardSection monthsRange={monthsRange} />
       <AppFooter />

@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from './session'
 import { getUserDisplayName } from './user'
 import { updatePasswordSchema, updateProfileSchema } from '../shopping/forms'
+import { FieldError } from '@/components/FieldError'
 import { AppFooter } from '@/components/AppFooter'
 
 type ProfileValues = z.infer<typeof updateProfileSchema>
@@ -170,11 +171,7 @@ export function ProfilePage() {
                 aria-invalid={Boolean(profileForm.formState.errors.preferred_name)}
                 {...profileForm.register('preferred_name')}
               />
-              {profileForm.formState.errors.preferred_name && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {profileForm.formState.errors.preferred_name.message}
-                </p>
-              )}
+              <FieldError error={profileForm.formState.errors.preferred_name?.message} />
             </div>
 
             {profileSuccess && (
@@ -243,11 +240,7 @@ export function ProfilePage() {
                 aria-invalid={Boolean(passwordForm.formState.errors.password)}
                 {...passwordForm.register('password')}
               />
-              {passwordForm.formState.errors.password && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.password.message}
-                </p>
-              )}
+              <FieldError error={passwordForm.formState.errors.password?.message} />
             </div>
 
             <div className="grid gap-1">
@@ -266,11 +259,7 @@ export function ProfilePage() {
                 aria-invalid={Boolean(passwordForm.formState.errors.confirm_password)}
                 {...passwordForm.register('confirm_password')}
               />
-              {passwordForm.formState.errors.confirm_password && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {passwordForm.formState.errors.confirm_password.message}
-                </p>
-              )}
+              <FieldError error={passwordForm.formState.errors.confirm_password?.message} />
             </div>
 
             {passwordSuccess && (

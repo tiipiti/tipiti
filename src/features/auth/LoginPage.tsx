@@ -8,6 +8,7 @@ import { emailSchema, passwordAuthSchema, signupSchema } from '@/features/shoppi
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/lib/theme'
 import { PasswordInput } from './PasswordInput'
+import { FieldError } from '@/components/FieldError'
 
 type EmailValues = z.infer<typeof emailSchema>
 type PasswordAuthValues = z.infer<typeof passwordAuthSchema>
@@ -235,11 +236,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 aria-invalid={Boolean(signupForm.formState.errors.name)}
                 {...signupForm.register('name')}
               />
-              {signupForm.formState.errors.name && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {signupForm.formState.errors.name.message}
-                </p>
-              )}
+              <FieldError error={signupForm.formState.errors.name?.message} />
             </div>
 
             <div className="grid gap-1">
@@ -258,11 +255,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 aria-invalid={Boolean(signupForm.formState.errors.preferred_name)}
                 {...signupForm.register('preferred_name')}
               />
-              {signupForm.formState.errors.preferred_name && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {signupForm.formState.errors.preferred_name.message}
-                </p>
-              )}
+              <FieldError error={signupForm.formState.errors.preferred_name?.message} />
             </div>
 
             <div className="grid gap-1">
@@ -279,11 +272,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 aria-invalid={Boolean(signupForm.formState.errors.email)}
                 {...signupForm.register('email')}
               />
-              {signupForm.formState.errors.email && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {signupForm.formState.errors.email.message}
-                </p>
-              )}
+              <FieldError error={signupForm.formState.errors.email?.message} />
             </div>
 
             <div className="grid gap-1">
@@ -300,18 +289,10 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <p className="text-[10px] font-bold uppercase text-black/70">
                 Mínimo de 8 caracteres com letras e números
               </p>
-              {signupForm.formState.errors.password && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {signupForm.formState.errors.password.message}
-                </p>
-              )}
+              <FieldError error={signupForm.formState.errors.password?.message} />
             </div>
 
-            {requestError && (
-              <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                {requestError}
-              </p>
-            )}
+            <FieldError error={requestError ?? undefined} />
 
             <div className="mt-2 flex flex-col gap-2">
               <button
@@ -362,11 +343,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 aria-invalid={Boolean(loginForm.formState.errors.email)}
                 {...loginForm.register('email')}
               />
-              {loginForm.formState.errors.email && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {loginForm.formState.errors.email.message}
-                </p>
-              )}
+              <FieldError error={loginForm.formState.errors.email?.message} />
             </div>
 
             <div className="grid gap-2">
@@ -380,18 +357,10 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 autoComplete="current-password"
                 toggleAriaLabel="senha de acesso"
               />
-              {loginForm.formState.errors.password && (
-                <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                  {loginForm.formState.errors.password.message}
-                </p>
-              )}
+              <FieldError error={loginForm.formState.errors.password?.message} />
             </div>
 
-            {requestError && (
-              <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                {requestError}
-              </p>
-            )}
+            <FieldError error={requestError ?? undefined} />
 
             <div className="mt-2 flex flex-col gap-2">
               <button
@@ -428,11 +397,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
             {sentEmail ? (
               <div className="tipiti-panel tipiti-panel-green mt-6 grid gap-3">
                 <p className="font-bold uppercase text-black">Confira {sentEmail}</p>
-                {requestError && (
-                  <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                    {requestError}
-                  </p>
-                )}
+                <FieldError error={requestError ?? undefined} />
                 <button
                   className="tipiti-button w-full"
                   disabled={requesting}
@@ -472,18 +437,10 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                     aria-invalid={Boolean(emailForm.formState.errors.email)}
                     {...emailForm.register('email')}
                   />
-                  {emailForm.formState.errors.email && (
-                    <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                      {emailForm.formState.errors.email.message}
-                    </p>
-                  )}
+                  <FieldError error={emailForm.formState.errors.email?.message} />
                 </div>
 
-                {requestError && (
-                  <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-                    {requestError}
-                  </p>
-                )}
+                <FieldError error={requestError ?? undefined} />
 
                 <div className="mt-2 flex flex-col gap-2">
                   <button

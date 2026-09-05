@@ -12,6 +12,7 @@ import { MonthlyBanner } from './MonthlyBanner'
 import { PixelCart } from './PixelIcons'
 import { AppFooter } from '@/components/AppFooter'
 import { ErrorPanel } from '@/components/ErrorPanel'
+import { PageHeader } from '@/components/PageHeader'
 import {
   useActiveLists,
   useArchivedLists,
@@ -90,24 +91,16 @@ export function HomePage() {
 
   return (
     <main className="tipiti-page">
-      <header className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
-        <div>
-          <p className="tipiti-pixel text-sm font-bold uppercase tracking-wider text-black">
-            {displayName ? `Bem-vindo, ${displayName}` : 'Tipiti'}
-          </p>
-          <h1 className="mt-1 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
-            Listas ativas
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link to="/dashboard" className="tipiti-button py-2 text-xs">
-            Dashboard
-          </Link>
-          <Link to="/profile" className="tipiti-button py-2 text-xs" aria-label="Meu Perfil">
-            Perfil
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        brand={displayName ? `Bem-vindo, ${displayName}` : 'Tipiti'}
+        title="Listas ativas"
+        actions={
+          <>
+            <Link to="/dashboard" className="tipiti-button py-2 text-xs">Dashboard</Link>
+            <Link to="/profile" className="tipiti-button py-2 text-xs" aria-label="Meu Perfil">Perfil</Link>
+          </>
+        }
+      />
 
       {/* Monthly Consumption Dashboard Link */}
       <MonthlyBanner data={monthly.data} isLoading={monthly.isLoading} />

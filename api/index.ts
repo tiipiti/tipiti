@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handle } from 'hono/vercel'
 import { createClient } from '@supabase/supabase-js'
+import type { Context } from 'hono'
+import type { ZodSchema } from 'zod'
 
 import { prisma } from './prisma'
 import {
@@ -38,6 +40,66 @@ const parseSafeLimit = (raw: string | undefined): number => {
   const num = parseInt(raw || '20', 10)
   return Number.isFinite(num) && num > 0 ? Math.min(100, num) : 20
 }
+
+// ─── Route helpers (DRY) ────────────────────────────────────────────────────
+
+/** Returns an error response if `id` is not a valid UUID, otherwise undefined. */
+const requireValidUuid = (c: Context<Env>, id: string) => {
+  if (!uuidSchema.safeParse(id).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
+}
+
+/** Finds a list that belongs to `userId`. Returns null if not found. */
+const findUserList = (userId: string, listId: string) =>
+  prisma.list.findFirst({ where: { id: listId, user_id: userId } })
+
+/** Finds an item that belongs to a list owned by `userId`. Returns null if not found. */
+const findUserItem = (userId: string, itemId: string) =>
+  prisma.item.findFirst({ where: { id: itemId, list: { user_id: userId } } })
+
+/**
+ * Parses and validates the request body against `schema`.
+ * Returns `{ data }` on success or sends a 400 response and returns null.
+ */
+async function parseBody<T>(
+  c: Context<Env>,
+  schema: ZodSchema<T>,
+  fallback: string,
+): Promise<{ data: T } | null> {
+  const raw = await c.req.json().catch(() => ({}))
+  const result = schema.safeParse(raw)
+  if (result.success) return { data: result.data }
+  void c.json({ error: result.error.issues[0]?.message || fallback }, 400)
+  return null
+}
+
+/** Extracts and validates pagination query params. */
+const getPagination = (c: Context<Env>) => {
+  const page = parseSafePage(c.req.query('page'))
+  const limit = parseSafeLimit(c.req.query('limit'))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Builds the standard paginated response envelope. */
+const paginatedResponse = <T>(
+  data: T[],
+  total: number,
+  page: number,
+  limit: number,
+  skip: number,
+) => ({
+  data,
+  pagination: {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    hasMore: skip + data.length < total,
+  },
+})
+
+// ─── Middleware ──────────────────────────────────────────────────────────────
 
 // Global error handler: never leak internal stack traces or connection strings to client
 app.onError((err, c) => {
@@ -93,15 +155,15 @@ app.use('*', async (c, next) => {
   await next()
 })
 
+// ─── Routes ─────────────────────────────────────────────────────────────────
+
 app.get('/health', (c) => c.json({ ok: true, timestamp: new Date().toISOString() }))
 
 // GET /api/lists with safe pagination (default 20 per page)
 app.get('/lists', async (c) => {
   const userId = c.get('userId')
   const archived = c.req.query('archived') === 'true'
-  const page = parseSafePage(c.req.query('page'))
-  const limit = parseSafeLimit(c.req.query('limit'))
-  const skip = (page - 1) * limit
+  const { page, limit, skip } = getPagination(c)
 
   const [lists, total] = await Promise.all([
     prisma.list.findMany({
@@ -120,31 +182,19 @@ app.get('/lists', async (c) => {
     }),
   ])
 
-  return c.json({
-    data: lists,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasMore: skip + lists.length < total,
-    },
-  })
+  return c.json(paginatedResponse(lists, total, page, limit, skip))
 })
 
 // POST /api/lists
 app.post('/lists', async (c) => {
   const userId = c.get('userId')
-  const rawBody = await c.req.json().catch(() => ({}))
-  const parse = createListSchema.safeParse(rawBody)
-  if (!parse.success) {
-    return c.json({ error: parse.error.issues[0]?.message || 'Informe um nome válido para a lista' }, 400)
-  }
+  const parsed = await parseBody(c, createListSchema, 'Informe um nome válido para a lista')
+  if (!parsed) return c.res
 
   const list = await prisma.list.create({
     data: {
       user_id: userId,
-      name: parse.data.name,
+      name: parsed.data.name,
     },
   })
   return c.json({ data: list }, 201)
@@ -155,9 +205,8 @@ app.get('/lists/:id', async (c) => {
   const userId = c.get('userId')
   const id = c.req.param('id')
 
-  if (!uuidSchema.safeParse(id).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, id)
+  if (uuidErr) return uuidErr
 
   const list = await prisma.list.findFirst({
     where: { id, user_id: userId },
@@ -175,26 +224,22 @@ app.patch('/lists/:id', async (c) => {
   const userId = c.get('userId')
   const id = c.req.param('id')
 
-  if (!uuidSchema.safeParse(id).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, id)
+  if (uuidErr) return uuidErr
 
-  const rawBody = await c.req.json().catch(() => ({}))
-  const parse = updateListSchema.safeParse(rawBody)
-  if (!parse.success) {
-    return c.json({ error: parse.error.issues[0]?.message || 'Dados inválidos' }, 400)
-  }
+  const parsed = await parseBody(c, updateListSchema, 'Dados inválidos')
+  if (!parsed) return c.res
 
-  const existing = await prisma.list.findFirst({ where: { id, user_id: userId } })
+  const existing = await findUserList(userId, id)
   if (!existing) {
     return c.json({ error: 'Lista não encontrada' }, 404)
   }
 
   const data: { name?: string; is_archived?: boolean; archived_at?: Date | null } = {}
-  if (parse.data.name !== undefined) data.name = parse.data.name
-  if (parse.data.is_archived !== undefined) {
-    data.is_archived = parse.data.is_archived
-    data.archived_at = parse.data.is_archived ? new Date() : null
+  if (parsed.data.name !== undefined) data.name = parsed.data.name
+  if (parsed.data.is_archived !== undefined) {
+    data.is_archived = parsed.data.is_archived
+    data.archived_at = parsed.data.is_archived ? new Date() : null
   }
 
   const updated = await prisma.list.update({
@@ -245,21 +290,16 @@ app.get('/lists/:id/items', async (c) => {
   const userId = c.get('userId')
   const listId = c.req.param('id')
 
-  if (!uuidSchema.safeParse(listId).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, listId)
+  if (uuidErr) return uuidErr
 
   // Security check: verify list ownership before exposing items
-  const list = await prisma.list.findFirst({
-    where: { id: listId, user_id: userId },
-  })
+  const list = await findUserList(userId, listId)
   if (!list) {
     return c.json({ error: 'Lista não encontrada' }, 404)
   }
 
-  const page = parseSafePage(c.req.query('page'))
-  const limit = parseSafeLimit(c.req.query('limit'))
-  const skip = (page - 1) * limit
+  const { page, limit, skip } = getPagination(c)
 
   const [items, total] = await Promise.all([
     prisma.item.findMany({
@@ -271,16 +311,7 @@ app.get('/lists/:id/items', async (c) => {
     prisma.item.count({ where: { list_id: listId } }),
   ])
 
-  return c.json({
-    data: items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasMore: skip + items.length < total,
-    },
-  })
+  return c.json(paginatedResponse(items, total, page, limit, skip))
 })
 
 // POST /api/lists/:id/items - Protected against BOLA/IDOR with schema bounds
@@ -288,30 +319,24 @@ app.post('/lists/:id/items', async (c) => {
   const userId = c.get('userId')
   const listId = c.req.param('id')
 
-  if (!uuidSchema.safeParse(listId).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, listId)
+  if (uuidErr) return uuidErr
 
   // Security check: verify list ownership before adding items
-  const list = await prisma.list.findFirst({
-    where: { id: listId, user_id: userId },
-  })
+  const list = await findUserList(userId, listId)
   if (!list) {
     return c.json({ error: 'Lista não encontrada' }, 404)
   }
 
-  const rawBody = await c.req.json().catch(() => ({}))
-  const parse = createItemSchema.safeParse(rawBody)
-  if (!parse.success) {
-    return c.json({ error: parse.error.issues[0]?.message || 'Informe dados válidos para o item' }, 400)
-  }
+  const parsed = await parseBody(c, createItemSchema, 'Informe dados válidos para o item')
+  if (!parsed) return c.res
 
   const item = await prisma.item.create({
     data: {
       list_id: listId,
-      name: parse.data.name,
-      quantity: parse.data.quantity,
-      price: parse.data.price,
+      name: parsed.data.name,
+      quantity: parsed.data.quantity,
+      price: parsed.data.price,
       is_purchased: false,
     },
   })
@@ -323,27 +348,21 @@ app.patch('/items/:id', async (c) => {
   const userId = c.get('userId')
   const id = c.req.param('id')
 
-  if (!uuidSchema.safeParse(id).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, id)
+  if (uuidErr) return uuidErr
 
   // Security check: verify item belongs to a list owned by this user
-  const item = await prisma.item.findFirst({
-    where: { id, list: { user_id: userId } },
-  })
+  const item = await findUserItem(userId, id)
   if (!item) {
     return c.json({ error: 'Item não encontrado' }, 404)
   }
 
-  const rawBody = await c.req.json().catch(() => ({}))
-  const parse = updateItemSchema.safeParse(rawBody)
-  if (!parse.success) {
-    return c.json({ error: parse.error.issues[0]?.message || 'Dados inválidos' }, 400)
-  }
+  const parsed = await parseBody(c, updateItemSchema, 'Dados inválidos')
+  if (!parsed) return c.res
 
   const updated = await prisma.item.update({
     where: { id },
-    data: parse.data,
+    data: parsed.data,
   })
   return c.json({ data: updated })
 })
@@ -353,14 +372,11 @@ app.delete('/items/:id', async (c) => {
   const userId = c.get('userId')
   const id = c.req.param('id')
 
-  if (!uuidSchema.safeParse(id).success) {
-    return c.json({ error: 'Identificador inválido' }, 400)
-  }
+  const uuidErr = requireValidUuid(c, id)
+  if (uuidErr) return uuidErr
 
   // Security check: verify item belongs to a list owned by this user
-  const item = await prisma.item.findFirst({
-    where: { id, list: { user_id: userId } },
-  })
+  const item = await findUserItem(userId, id)
   if (!item) {
     return c.json({ error: 'Item não encontrado' }, 404)
   }

@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, nameSchema } from './forms'
 import { useItems, useRenameList } from './queries'
 import { purchasedTotal } from './total'
 import type { List } from './types'
+import { FieldError } from '@/components/FieldError'
 
 const renameSchema = z.object({ name: nameSchema })
 type RenameValues = z.infer<typeof renameSchema>
@@ -46,14 +47,8 @@ export function ListSummary({ list, history = false }: { list: List; history?: b
             aria-invalid={Boolean(errors.name)}
             {...register('name')}
           />
-          <p className="min-h-5 text-xs font-bold text-[#FF5F1F]" role="alert">
-            {errors.name?.message}
-          </p>
-          {rename.error && (
-            <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
-              {rename.error.message}
-            </p>
-          )}
+          <FieldError error={errors.name?.message} />
+          <FieldError error={rename.error?.message} />
           <div className="flex gap-2">
             <button
               className="tipiti-button tipiti-button-primary py-2 text-xs"
