@@ -87,7 +87,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
         <td className="p-3 align-top">
           <button
             className={`tipiti-status ${item.is_purchased ? 'bg-[#D6D0C8]' : 'bg-white'}`}
-            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'pendente' : 'comprado'}`}
+            aria-label={`Marcar ${item.name} como ${item.is_purchased ? 'não comprado' : 'comprado'}`}
             aria-pressed={item.is_purchased}
             disabled={readOnly || toggle.isPending}
             type="button"
@@ -102,7 +102,7 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
               />
             )}
             <span className="tipiti-pixel text-xs tracking-wider">
-              {item.is_purchased ? 'COMPRADO' : 'PENDENTE'}
+              COMPRADO
             </span>
           </button>
         </td>

@@ -85,6 +85,14 @@ export const useDeleteItem = () => {
   return useMutation({ mutationFn: (item: { id: string; listId: string }) => api.deleteItem(item.id), onSuccess: (_, { listId }) => invalidate(listId) })
 }
 
+export const useUncheckAllItems = () => {
+  const invalidate = useInvalidateList()
+  return useMutation({
+    mutationFn: (listId: string) => api.uncheckAllItems(listId),
+    onSuccess: (_, listId) => invalidate(listId),
+  })
+}
+
 export const useArchiveList = () => {
   const invalidate = useInvalidateList()
   return useMutation({ mutationFn: api.archiveList, onSuccess: (_, id) => invalidate(id) })

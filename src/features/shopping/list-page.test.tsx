@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const archiveMutate = vi.fn()
+const uncheckAllMutate = vi.fn()
 
 vi.mock('./queries', () => ({
   useList: () => ({ data: { id: 'list-1', name: 'Mercado', is_archived: false }, error: null, isLoading: false, refetch: vi.fn() }),
@@ -19,6 +20,7 @@ vi.mock('./queries', () => ({
   useDeleteItem: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
   useArchiveList: () => ({ mutateAsync: archiveMutate, error: null, isPending: false, reset: vi.fn() }),
   useReopenList: () => ({ mutateAsync: vi.fn(), error: null, isPending: false, reset: vi.fn() }),
+  useUncheckAllItems: () => ({ mutateAsync: uncheckAllMutate, error: null, isPending: false, reset: vi.fn() }),
 }))
 
 import { ListPage } from './ListPage'
@@ -64,7 +66,26 @@ describe('ListPage', () => {
     expect(screen.getByRole('columnheader', { name: 'PREÇO' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'STATUS' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Marcar Feijão como comprado' }).getAttribute('aria-pressed')).toBe('false')
-    expect(screen.getByText('PENDENTE')).toBeTruthy()
+    expect(screen.getAllByText('COMPRADO').length).toBeGreaterThan(0)
+  })
+
+  it('opens confirmation modal and resets purchased items when clicking Desmarcar comprados', async () => {
+    uncheckAllMutate.mockReset()
+    render(
+      <MemoryRouter initialEntries={['/list/list-1']}>
+        <Routes><Route path="/list/:id" element={<ListPage />} /></Routes>
+      </MemoryRouter>,
+    )
+
+    const resetBtn = screen.getByRole('button', { name: 'Desmarcar comprados' })
+    expect(resetBtn).toBeInTheDocument()
+
+    fireEvent.click(resetBtn)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Desmarcar Comprados')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, Desmarcar Todos' }))
+    await waitFor(() => expect(uncheckAllMutate).toHaveBeenCalledWith('list-1'))
   })
 
   it('asks whether to leave items pending in a confirmation modal when finishing a list', async () => {

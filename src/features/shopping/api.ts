@@ -100,6 +100,16 @@ export const deleteItem = async (id: string) => {
   throwIfError(error)
 }
 
+export const uncheckAllItems = async (listId: string) => {
+  const { data, error } = await supabase
+    .from('items')
+    .update({ is_purchased: false })
+    .eq('list_id', listId)
+    .select(itemColumns)
+  throwIfError(error)
+  return (data ?? []) as Item[]
+}
+
 export const archiveList = async (id: string) => {
   const { data, error } = await supabase
     .from('lists')

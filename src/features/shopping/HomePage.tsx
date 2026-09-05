@@ -10,7 +10,6 @@ import { formatCurrency, nameSchema } from './forms'
 import { ListSummary } from './ListSummary'
 import { monthDifference } from './monthly'
 import { PixelCart, PixelCoin } from './PixelIcons'
-import { DashboardSection } from './DashboardSection'
 import {
   useActiveLists,
   useArchivedLists,
@@ -42,7 +41,6 @@ export function HomePage() {
   const create = useCreateList()
   const clone = useCloneLatestArchivedList()
   const [creating, setCreating] = useState(false)
-  const [dashboardExpanded, setDashboardExpanded] = useState(false)
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const {
     register,
@@ -138,16 +136,15 @@ export function HomePage() {
         </div>
       </header>
 
-      {/* Monthly Consumption Dashboard */}
+      {/* Monthly Consumption Dashboard Link */}
       {monthly.isLoading ? (
         <div className="tipiti-skeleton mt-6 h-28" />
       ) : monthly.data ? (
         <div className="mt-6">
-          <button
-            type="button"
-            className="tipiti-panel tipiti-panel-yellow tipiti-panel-action w-full text-left cursor-pointer transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
+          <Link
+            to="/dashboard"
+            className="tipiti-panel tipiti-panel-yellow tipiti-panel-action block w-full text-left transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
             aria-label="Ver dashboard de consumo por mês"
-            onClick={() => setDashboardExpanded((prev) => !prev)}
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -155,8 +152,8 @@ export function HomePage() {
                   <h2 className="tipiti-pixel text-xs font-bold uppercase tracking-wider text-black">
                     Consumo do mês
                   </h2>
-                  <span className="bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#F4F0EB]">
-                    {dashboardExpanded ? '▲ Recolher dashboard' : '▼ Ver linha do tempo e gastos'}
+                  <span className="bg-black px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#F4F0EB]">
+                    ➔ Ver dashboard completo
                   </span>
                 </div>
                 <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black">
@@ -172,17 +169,11 @@ export function HomePage() {
                 </p>
                 <p className="mt-0.5">{diffText}</p>
               </div>
-              <span className="underline text-[11px] font-bold">
-                {dashboardExpanded ? 'Recolher' : 'Abrir linha do tempo'}
+              <span className="underline text-xs font-bold">
+                Abrir gráficos e histórico ➔
               </span>
             </div>
-          </button>
-
-          {dashboardExpanded && (
-            <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-150">
-              <DashboardSection />
-            </div>
-          )}
+          </Link>
         </div>
       ) : null}
 

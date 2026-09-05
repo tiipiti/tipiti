@@ -63,7 +63,7 @@ describe('HomePage', () => {
     expect(await screen.findByText('Informe um nome')).toBeTruthy()
   })
 
-  it('shows this month, completed purchases and expands dashboard timeline on click', async () => {
+  it('shows this month, completed purchases and links directly to /dashboard', async () => {
     monthlyQuery.mockReturnValue({
       data: { current: { total: 120, purchases: 2 }, previous: { total: 80, purchases: 1 } },
       isLoading: false,
@@ -76,16 +76,7 @@ describe('HomePage', () => {
     expect(screen.getByText(/40,00 a mais que agosto/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard')
 
-    const bannerButton = screen.getByRole('button', { name: /ver dashboard de consumo por mês/i })
-    expect(screen.queryByText('Gastos e Linha do Tempo')).toBeNull()
-
-    // Click banner expands dashboard inline
-    fireEvent.click(bannerButton)
-    expect(screen.getByText('Gastos e Linha do Tempo')).toBeInTheDocument()
-    expect(screen.getByText('Linha do Tempo')).toBeInTheDocument()
-
-    // Click again toggles off
-    fireEvent.click(bannerButton)
-    expect(screen.queryByText('Gastos e Linha do Tempo')).toBeNull()
+    const bannerLink = screen.getByRole('link', { name: /ver dashboard de consumo por mês/i })
+    expect(bannerLink).toHaveAttribute('href', '/dashboard')
   })
 })

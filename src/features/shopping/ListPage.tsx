@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { formatCurrency, nameSchema } from './forms'
 import { ItemRow } from './ItemRow'
 import { PixelCoin } from './PixelIcons'
-import { useArchiveList, useCreateItem, useItems, useList, useReopenList } from './queries'
+import { useArchiveList, useCreateItem, useItems, useList, useReopenList, useUncheckAllItems } from './queries'
 import { purchasedTotal } from './total'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
@@ -22,8 +22,10 @@ export function ListPage() {
   const createItem = useCreateItem()
   const archive = useArchiveList()
   const reopen = useReopenList()
+  const uncheckAll = useUncheckAllItems()
   const [retry, setRetry] = useState<(() => void) | null>(null)
   const [confirmFinishOpen, setConfirmFinishOpen] = useState(false)
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const {
     register,
@@ -114,39 +116,53 @@ export function ListPage() {
       : 'Deseja finalizar esta compra e arquivar a lista?'
 
   return (
-    <main className="tipiti-page pb-32">
-      <header className="border-b-4 border-black pb-4">
+    <main className="tipiti-page pb-44">
+      <header className="sticky top-0 z-30 -mx-5 border-b-4 border-black bg-[#F4F0EB] px-5 pb-3 pt-2">
         <div className="flex items-start justify-between gap-4">
           <div>
             <Link
-              className="tipiti-button tipiti-button-sm tipiti-button-secondary"
+              className="tipiti-button tipiti-button-sm tipiti-button-secondary font-bold"
               to={readOnly ? '/history' : '/home'}
             >
-              &lt; VOLTAR
+              ← SALVAR E VOLTAR
             </Link>
             <h1 className="mt-2 font-['Anton',Impact,'Arial_Black',sans-serif] text-3xl font-black uppercase tracking-tight text-black">
               {list.data.name}
             </h1>
           </div>
-          {readOnly ? (
-            <button
-              className="tipiti-button tipiti-button-primary py-2 px-3 text-xs"
-              disabled={reopen.isPending}
-              type="button"
-              onClick={() => void reopenCurrentList()}
-            >
-              Reabrir lista
-            </button>
-          ) : (
-            <button
-              className="tipiti-button tipiti-button-warning py-2 px-3 text-xs"
-              disabled={archive.isPending}
-              type="button"
-              onClick={() => void finish()}
-            >
-              Finalizar compra
-            </button>
-          )}
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+            {readOnly ? (
+              <button
+                className="tipiti-button tipiti-button-primary py-2 px-3 text-xs"
+                disabled={reopen.isPending}
+                type="button"
+                onClick={() => void reopenCurrentList()}
+              >
+                Reabrir lista
+              </button>
+            ) : (
+              <>
+                {items.data?.some((i) => i.is_purchased) && (
+                  <button
+                    className="tipiti-button tipiti-button-sm tipiti-button-yellow py-2 px-3 text-xs font-bold"
+                    disabled={uncheckAll.isPending}
+                    type="button"
+                    onClick={() => setConfirmResetOpen(true)}
+                  >
+                    Desmarcar comprados
+                  </button>
+                )}
+                <button
+                  className="tipiti-button tipiti-button-warning py-2 px-3 text-xs"
+                  disabled={archive.isPending}
+                  type="button"
+                  onClick={() => void finish()}
+                >
+                  Finalizar compra
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -243,6 +259,21 @@ export function ListPage() {
         isPending={archive.isPending}
         onConfirm={() => void onConfirmFinish()}
         onCancel={() => setConfirmFinishOpen(false)}
+      />
+
+      <ConfirmModal
+        open={confirmResetOpen}
+        title="Desmarcar Comprados"
+        message="Deseja desmarcar todos os itens comprados para reiniciar a lista para sua próxima ida ao mercado? Os itens e preços continuarão salvos."
+        confirmText="Sim, Desmarcar Todos"
+        cancelText="Voltar"
+        variant="warning"
+        isPending={uncheckAll.isPending}
+        onConfirm={async () => {
+          await uncheckAll.mutateAsync(id)
+          setConfirmResetOpen(false)
+        }}
+        onCancel={() => setConfirmResetOpen(false)}
       />
     </main>
   )
