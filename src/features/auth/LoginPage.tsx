@@ -7,6 +7,7 @@ import type { z } from 'zod'
 import { emailSchema, passwordAuthSchema, signupSchema } from '@/features/shopping/forms'
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/lib/theme'
+import { PasswordInput } from './PasswordInput'
 
 type EmailValues = z.infer<typeof emailSchema>
 type PasswordAuthValues = z.infer<typeof passwordAuthSchema>
@@ -27,8 +28,6 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
   const [requestError, setRequestError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [requesting, setRequesting] = useState(false)
-  const [showSignupPassword, setShowSignupPassword] = useState(false)
-  const [showLoginPassword, setShowLoginPassword] = useState(false)
 
   // Form for magic link (email only)
   const emailForm = useForm<EmailValues>({
@@ -291,25 +290,13 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="signup-password">
                 Senha
               </label>
-              <div className="relative flex items-center">
-                <input
-                  id="signup-password"
-                  type={showSignupPassword ? 'text' : 'password'}
-                  maxLength={72}
-                  autoComplete="new-password"
-                  className="tipiti-input pr-28"
-                  aria-invalid={Boolean(signupForm.formState.errors.password)}
-                  {...signupForm.register('password')}
-                />
-                <button
-                  type="button"
-                  className="tipiti-button tipiti-button-sm absolute right-1.5 py-1 px-2.5 text-[10px]"
-                  onClick={() => setShowSignupPassword((prev) => !prev)}
-                  aria-label={showSignupPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showSignupPassword ? 'Ocultar' : 'Mostrar'}
-                </button>
-              </div>
+              <PasswordInput
+                id="signup-password"
+                registration={signupForm.register('password')}
+                hasError={Boolean(signupForm.formState.errors.password)}
+                autoComplete="new-password"
+                toggleAriaLabel="senha"
+              />
               <p className="text-[10px] font-bold uppercase text-black/70">
                 Mínimo de 8 caracteres com letras e números
               </p>
@@ -386,25 +373,13 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <label className="text-xs font-bold uppercase tracking-wider text-black" htmlFor="login-password">
                 Senha
               </label>
-              <div className="relative flex items-center">
-                <input
-                  id="login-password"
-                  type={showLoginPassword ? 'text' : 'password'}
-                  maxLength={72}
-                  autoComplete="current-password"
-                  className="tipiti-input pr-28"
-                  aria-invalid={Boolean(loginForm.formState.errors.password)}
-                  {...loginForm.register('password')}
-                />
-                <button
-                  type="button"
-                  className="tipiti-button tipiti-button-sm absolute right-1.5 py-1 px-2.5 text-[10px]"
-                  onClick={() => setShowLoginPassword((prev) => !prev)}
-                  aria-label={showLoginPassword ? 'Ocultar senha de acesso' : 'Mostrar senha de acesso'}
-                >
-                  {showLoginPassword ? 'Ocultar' : 'Mostrar'}
-                </button>
-              </div>
+              <PasswordInput
+                id="login-password"
+                registration={loginForm.register('password')}
+                hasError={Boolean(loginForm.formState.errors.password)}
+                autoComplete="current-password"
+                toggleAriaLabel="senha de acesso"
+              />
               {loginForm.formState.errors.password && (
                 <p className="text-xs font-bold text-[#FF5F1F]" role="alert">
                   {loginForm.formState.errors.password.message}

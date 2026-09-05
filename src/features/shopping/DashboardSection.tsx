@@ -9,6 +9,7 @@ import {
 import { formatCurrency } from './forms'
 import { PixelCart, PixelCoin } from './PixelIcons'
 import { useMonthlyHistory } from './queries'
+import { ErrorPanel } from '@/components/ErrorPanel'
 
 const chartConfig = {
   total: {
@@ -38,16 +39,10 @@ export function DashboardSection({ monthsRange = 6 }: { monthsRange?: 6 | 12 }) 
       )}
 
       {historyQuery.error && (
-        <div className="tipiti-panel tipiti-panel-orange text-sm text-black">
-          <p className="font-bold">{historyQuery.error.message}</p>
-          <button
-            className="mt-2 font-bold underline cursor-pointer"
-            type="button"
-            onClick={() => historyQuery.refetch()}
-          >
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorPanel
+          message={historyQuery.error.message}
+          onRetry={() => void historyQuery.refetch()}
+        />
       )}
 
       {!historyQuery.isLoading && !historyQuery.error && (

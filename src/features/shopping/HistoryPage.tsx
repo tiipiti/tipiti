@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ListSummary } from './ListSummary'
 import { useArchivedLists } from './queries'
 import { AppFooter } from '@/components/AppFooter'
+import { ErrorPanel } from '@/components/ErrorPanel'
 
 export function HistoryPage() {
   const history = useArchivedLists()
@@ -37,16 +38,11 @@ export function HistoryPage() {
       )}
 
       {history.error && (
-        <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
-          <p className="font-bold">{history.error.message}</p>
-          <button
-            className="mt-2 font-bold underline"
-            type="button"
-            onClick={() => history.refetch()}
-          >
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorPanel
+          className="mt-6"
+          message={history.error.message}
+          onRetry={() => void history.refetch()}
+        />
       )}
 
       {!history.isLoading && !history.error && !history.data?.length && (

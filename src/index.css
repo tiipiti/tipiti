@@ -336,43 +336,29 @@ html.dark .tipiti-panel-action {
   box-shadow: 6px 6px 0 #F4F0EB !important;
 }
 
-html.dark .tipiti-panel-yellow {
-  background-color: #FFFF00 !important;
+html.dark .tipiti-panel-yellow,
+html.dark .tipiti-panel-green,
+html.dark .tipiti-panel-orange {
   border-color: #F4F0EB !important;
   color: #000000 !important;
 }
 
 html.dark .tipiti-panel-yellow *,
-html.dark .tipiti-panel-yellow h1,
-html.dark .tipiti-panel-yellow h2,
-html.dark .tipiti-panel-yellow strong {
+html.dark .tipiti-panel-green *,
+html.dark .tipiti-panel-orange * {
   color: #000000 !important;
+}
+
+html.dark .tipiti-panel-yellow {
+  background-color: #FFFF00 !important;
 }
 
 html.dark .tipiti-panel-green {
   background-color: #39FF14 !important;
-  border-color: #F4F0EB !important;
-  color: #000000 !important;
-}
-
-html.dark .tipiti-panel-green *,
-html.dark .tipiti-panel-green h1,
-html.dark .tipiti-panel-green h2,
-html.dark .tipiti-panel-green strong {
-  color: #000000 !important;
 }
 
 html.dark .tipiti-panel-orange {
   background-color: #FF5F1F !important;
-  border-color: #F4F0EB !important;
-  color: #000000 !important;
-}
-
-html.dark .tipiti-panel-orange *,
-html.dark .tipiti-panel-orange h1,
-html.dark .tipiti-panel-orange h2,
-html.dark .tipiti-panel-orange strong {
-  color: #000000 !important;
 }
 
 html.dark .tipiti-button {
@@ -392,25 +378,24 @@ html.dark .tipiti-button:active:not(:disabled) {
   box-shadow: 0 0 0 #F4F0EB;
 }
 
-html.dark .tipiti-button-primary {
-  background-color: #39FF14 !important;
+html.dark .tipiti-button-primary,
+html.dark .tipiti-button-warning,
+html.dark .tipiti-button-yellow {
   color: #000000 !important;
   border-color: #F4F0EB !important;
   box-shadow: 4px 4px 0 #F4F0EB !important;
+}
+
+html.dark .tipiti-button-primary {
+  background-color: #39FF14 !important;
 }
 
 html.dark .tipiti-button-warning {
   background-color: #FF5F1F !important;
-  color: #000000 !important;
-  border-color: #F4F0EB !important;
-  box-shadow: 4px 4px 0 #F4F0EB !important;
 }
 
 html.dark .tipiti-button-yellow {
   background-color: #FFFF00 !important;
-  color: #000000 !important;
-  border-color: #F4F0EB !important;
-  box-shadow: 4px 4px 0 #F4F0EB !important;
 }
 
 html.dark .tipiti-button-secondary {

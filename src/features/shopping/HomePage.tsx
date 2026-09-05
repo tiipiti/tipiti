@@ -6,11 +6,12 @@ import { z } from 'zod'
 
 import { useSession } from '@/features/auth/session'
 import { getUserDisplayName } from '@/features/auth/user'
-import { formatCurrency, nameSchema } from './forms'
+import { nameSchema } from './forms'
 import { ListSummary } from './ListSummary'
-import { monthDifference } from './monthly'
-import { PixelCart, PixelCoin } from './PixelIcons'
+import { MonthlyBanner } from './MonthlyBanner'
+import { PixelCart } from './PixelIcons'
 import { AppFooter } from '@/components/AppFooter'
+import { ErrorPanel } from '@/components/ErrorPanel'
 import {
   useActiveLists,
   useArchivedLists,
@@ -87,22 +88,6 @@ export function HomePage() {
 
   const error = active.error ?? archived.error ?? monthly.error ?? create.error ?? clone.error
 
-  const now = new Date()
-  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const prevMonthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(prevDate)
-
-  const currentTotal = monthly.data?.current.total ?? 0
-  const currentPurchases = monthly.data?.current.purchases ?? 0
-  const previousTotal = monthly.data?.previous.total ?? 0
-  const diff = monthDifference(currentTotal, previousTotal)
-
-  const diffText =
-    diff > 0
-      ? `${formatCurrency(diff)} a mais que ${prevMonthName}`
-      : diff < 0
-        ? `${formatCurrency(Math.abs(diff))} a menos que ${prevMonthName}`
-        : 'IGUAL AO MÊS PASSADO'
-
   return (
     <main className="tipiti-page">
       <header className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
@@ -125,40 +110,7 @@ export function HomePage() {
       </header>
 
       {/* Monthly Consumption Dashboard Link */}
-      {monthly.isLoading ? (
-        <div className="tipiti-skeleton mt-6 h-28" />
-      ) : monthly.data ? (
-        <div className="mt-6">
-          <Link
-            to="/dashboard"
-            className="tipiti-panel tipiti-panel-yellow tipiti-panel-action block w-full text-left transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
-            aria-label="Ver dashboard de consumo por mês"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="tipiti-pixel text-xs font-bold uppercase tracking-wider text-black">
-                    Consumo do mês
-                  </h2>
-                  <span className="bg-black px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-[#F4F0EB]">
-                    ➔ Ver dashboard completo
-                  </span>
-                </div>
-                <p className="mt-1 font-['Impact','Arial_Black',sans-serif] text-3xl font-black uppercase text-black tabular-nums">
-                  {formatCurrency(currentTotal)}
-                </p>
-              </div>
-              <PixelCoin width={32} height={32} />
-            </div>
-            <div className="mt-3 border-t-2 border-black pt-2 text-xs font-bold uppercase tracking-wide text-black">
-              <p>
-                {currentPurchases} {currentPurchases === 1 ? 'COMPRA FINALIZADA' : 'COMPRAS FINALIZADAS'}
-              </p>
-              <p className="mt-0.5">{diffText}</p>
-            </div>
-          </Link>
-        </div>
-      ) : null}
+      <MonthlyBanner data={monthly.data} isLoading={monthly.isLoading} />
 
       {/* Botão + Nova Lista (ou formulário) logo abaixo do banner de consumo */}
       {!creating ? (
@@ -216,16 +168,11 @@ export function HomePage() {
       )}
 
       {error && (
-        <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
-          <p className="font-bold">{error.message}</p>
-          <button
-            className="mt-2 font-bold underline cursor-pointer"
-            type="button"
-            onClick={() => void (retry ? retry() : clone.error ? cloneList() : active.refetch())}
-          >
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorPanel
+          className="mt-6"
+          message={error.message}
+          onRetry={() => void (retry ? retry() : clone.error ? cloneList() : active.refetch())}
+        />
       )}
 
       {!active.data?.length ? (

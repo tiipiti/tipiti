@@ -10,6 +10,7 @@ import { PixelCoin } from './PixelIcons'
 import { useArchiveList, useCreateItem, useItems, useList, useReopenList, useUncheckAllItems } from './queries'
 import { purchasedTotal } from './total'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { ErrorPanel } from '@/components/ErrorPanel'
 import { ThemeToggle } from '@/lib/theme'
 
 const newItemSchema = z.object({ name: nameSchema })
@@ -216,12 +217,11 @@ export function ListPage() {
       )}
 
       {retry && (
-        <div className="tipiti-panel tipiti-panel-orange mt-6 text-sm text-black">
-          <p className="font-bold">Não foi possível salvar a alteração.</p>
-          <button className="mt-2 font-bold underline cursor-pointer" type="button" onClick={retry}>
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorPanel
+          className="mt-6"
+          message="Não foi possível salvar a alteração."
+          onRetry={retry}
+        />
       )}
 
       {allPurchased && !readOnly && (
