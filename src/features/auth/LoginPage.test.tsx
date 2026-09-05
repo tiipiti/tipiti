@@ -159,4 +159,17 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
     expect(await screen.findByText('A senha deve conter pelo menos uma letra')).toBeInTheDocument()
   })
+
+  it('sets maxLength limits on all inputs', () => {
+    const { unmount } = render(<LoginPage initialMode="signup" />, { wrapper: MemoryRouter })
+    expect(screen.getByLabelText('Seu nome')).toHaveAttribute('maxLength', '100')
+    expect(screen.getByLabelText(/como prefere ser chamado/i)).toHaveAttribute('maxLength', '50')
+    expect(screen.getByLabelText('Seu e-mail')).toHaveAttribute('maxLength', '254')
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('maxLength', '72')
+    unmount()
+
+    render(<LoginPage initialMode="login" />, { wrapper: MemoryRouter })
+    expect(screen.getByLabelText('Seu e-mail')).toHaveAttribute('maxLength', '254')
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('maxLength', '72')
+  })
 })

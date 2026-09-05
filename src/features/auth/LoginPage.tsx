@@ -242,6 +242,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <input
                 id="signup-name"
                 type="text"
+                maxLength={100}
                 placeholder="Ex.: Maria Silva"
                 autoComplete="name"
                 className="tipiti-input"
@@ -265,6 +266,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <input
                 id="signup-preferred-name"
                 type="text"
+                maxLength={50}
                 placeholder="Ex.: Maria"
                 className="tipiti-input"
                 aria-invalid={Boolean(signupForm.formState.errors.preferred_name)}
@@ -284,6 +286,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <input
                 id="signup-email"
                 type="email"
+                maxLength={254}
                 placeholder="Ex.: maria@email.com"
                 autoComplete="email"
                 className="tipiti-input"
@@ -305,6 +308,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 <input
                   id="signup-password"
                   type={showSignupPassword ? 'text' : 'password'}
+                  maxLength={72}
                   autoComplete="new-password"
                   className="tipiti-input pr-28"
                   aria-invalid={Boolean(signupForm.formState.errors.password)}
@@ -376,6 +380,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
               <input
                 id="login-email"
                 type="email"
+                maxLength={254}
                 autoComplete="email"
                 className="tipiti-input"
                 aria-invalid={Boolean(loginForm.formState.errors.email)}
@@ -396,6 +401,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                 <input
                   id="login-password"
                   type={showLoginPassword ? 'text' : 'password'}
+                  maxLength={72}
                   autoComplete="current-password"
                   className="tipiti-input pr-28"
                   aria-invalid={Boolean(loginForm.formState.errors.password)}
@@ -494,6 +500,7 @@ export function LoginPage({ initialMode = 'magic-link' }: { initialMode?: AuthMo
                   <input
                     id="email"
                     type="email"
+                    maxLength={254}
                     autoComplete="email"
                     className="tipiti-input"
                     aria-invalid={Boolean(emailForm.formState.errors.email)}

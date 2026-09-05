@@ -168,6 +168,7 @@ export function HomePage() {
             <input
               id="list-name"
               className="tipiti-input flex-1"
+              maxLength={100}
               aria-invalid={Boolean(errors.name)}
               {...register('name')}
             />

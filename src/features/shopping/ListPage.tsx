@@ -161,6 +161,7 @@ export function ListPage() {
               id="new-item"
               className="tipiti-input flex-1"
               placeholder="Ex.: arroz"
+              maxLength={100}
               aria-invalid={Boolean(errors.name)}
               {...newItemInput}
               ref={setMergedInputRef}

@@ -125,6 +125,8 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                   id={`quantity-${item.id}`}
                   className="tipiti-input text-sm"
                   inputMode="decimal"
+                  max={99999}
+                  maxLength={8}
                   aria-invalid={Boolean(errors.quantity)}
                   {...register('quantity')}
                 />
@@ -143,6 +145,8 @@ export function ItemRow({ item, readOnly }: { item: Item; readOnly: boolean }) {
                   id={`price-${item.id}`}
                   className="tipiti-input text-sm"
                   inputMode="decimal"
+                  max={999999.99}
+                  maxLength={12}
                   aria-invalid={Boolean(errors.price)}
                   {...register('price')}
                 />

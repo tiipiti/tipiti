@@ -16,40 +16,79 @@ const parseDecimal = (value: unknown) => {
 
 export const parseBrazilianPrice = (value: string) => parseDecimal(value)
 
-export const nameSchema = z.string().trim().min(1, 'Informe um nome')
+export const nameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Informe um nome')
+  .max(100, 'Máximo de 100 caracteres')
 
 export const emailSchema = z.object({
-  email: z.string().trim().email('Informe um e-mail válido'),
+  email: z
+    .string()
+    .trim()
+    .email('Informe um e-mail válido')
+    .max(254, 'E-mail muito longo'),
 })
 
-export const passwordSchema = z.string().min(6, 'A senha deve ter no mínimo 6 caracteres')
+export const passwordSchema = z
+  .string()
+  .min(6, 'A senha deve ter no mínimo 6 caracteres')
+  .max(72, 'A senha deve ter no máximo 72 caracteres')
 
 export const strongPasswordSchema = z
   .string()
   .min(8, 'A senha deve ter no mínimo 8 caracteres')
+  .max(72, 'A senha deve ter no máximo 72 caracteres')
   .regex(/[a-zA-Z]/, 'A senha deve conter pelo menos uma letra')
   .regex(/[0-9]/, 'A senha deve conter pelo menos um número')
 
 export const passwordAuthSchema = z.object({
-  email: z.string().trim().email('Informe um e-mail válido'),
-  password: z.string().min(1, 'Informe sua senha'),
+  email: z
+    .string()
+    .trim()
+    .email('Informe um e-mail válido')
+    .max(254, 'E-mail muito longo'),
+  password: z
+    .string()
+    .min(1, 'Informe sua senha')
+    .max(72, 'A senha deve ter no máximo 72 caracteres'),
 })
 
 export const signupSchema = z.object({
-  name: z.string().trim().min(1, 'Informe seu nome'),
-  preferred_name: z.string().trim().optional(),
-  email: z.string().trim().email('Informe um e-mail válido'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Informe seu nome')
+    .max(100, 'Nome deve ter no máximo 100 caracteres'),
+  preferred_name: z
+    .string()
+    .trim()
+    .max(50, 'Apelido deve ter no máximo 50 caracteres')
+    .optional(),
+  email: z
+    .string()
+    .trim()
+    .email('Informe um e-mail válido')
+    .max(254, 'E-mail muito longo'),
   password: strongPasswordSchema,
 })
 
 export const itemSchema = z.object({
   quantity: z.preprocess(
     parseDecimal,
-    z.number().finite().nonnegative('A quantidade não pode ser negativa'),
+    z
+      .number()
+      .finite()
+      .nonnegative('A quantidade não pode ser negativa')
+      .max(99999, 'Quantidade máxima permitida é 99.999'),
   ),
   price: z.preprocess(
     parseDecimal,
-    z.number().finite().nonnegative('O preço não pode ser negativo'),
+    z
+      .number()
+      .finite()
+      .nonnegative('O preço não pode ser negativo')
+      .max(999999.99, 'Preço máximo permitido é R$ 999.999,99'),
   ),
 })
 

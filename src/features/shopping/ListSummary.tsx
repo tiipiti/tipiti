@@ -42,6 +42,7 @@ export function ListSummary({ list, history = false }: { list: List; history?: b
           <input
             id={`name-${list.id}`}
             className="tipiti-input"
+            maxLength={100}
             aria-invalid={Boolean(errors.name)}
             {...register('name')}
           />
