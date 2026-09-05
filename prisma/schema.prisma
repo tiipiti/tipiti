@@ -1,0 +1,33 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model List {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String    @db.Uuid
+  name        String
+  is_archived Boolean   @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  archived_at DateTime? @db.Timestamptz(6)
+  items       Item[]
+
+  @@map("lists")
+}
+
+model Item {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  list_id      String   @db.Uuid
+  name         String
+  quantity     Decimal  @default(1) @db.Decimal
+  price        Decimal  @default(0) @db.Decimal
+  is_purchased Boolean  @default(false)
+  list         List     @relation(fields: [list_id], references: [id], onDelete: Cascade)
+
+  @@map("items")
+}
