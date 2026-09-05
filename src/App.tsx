@@ -18,6 +18,8 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<LoginPage initialMode="signup" />} />
+      <Route path="/cadastro" element={<LoginPage initialMode="signup" />} />
       <Route path="/auth/callback" element={<CallbackPage />} />
       <Route path="/home" element={<PrivatePage><HomePage /></PrivatePage>} />
       <Route path="/history" element={<PrivatePage><HistoryPage /></PrivatePage>} />

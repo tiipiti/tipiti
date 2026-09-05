@@ -22,6 +22,13 @@ export const emailSchema = z.object({
   email: z.string().trim().email('Informe um e-mail válido'),
 })
 
+export const passwordSchema = z.string().min(6, 'A senha deve ter no mínimo 6 caracteres')
+
+export const passwordAuthSchema = z.object({
+  email: z.string().trim().email('Informe um e-mail válido'),
+  password: passwordSchema,
+})
+
 export const itemSchema = z.object({
   quantity: z.preprocess(
     parseDecimal,
