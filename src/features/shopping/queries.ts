@@ -39,7 +39,7 @@ const useInvalidateList = () => {
 
 export const useCreateList = () => {
   const invalidate = useInvalidateLists()
-  return useMutation({ mutationFn: api.createList, onSuccess: invalidate })
+  return useMutation({ mutationFn: ({ name }: { name: string }) => api.createList(name), onSuccess: invalidate })
 }
 
 export const useRenameList = () => {

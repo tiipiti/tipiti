@@ -58,7 +58,7 @@ export const getItems = async (listId: string) => {
   return (data ?? []) as Item[]
 }
 
-export const createList = async (name = 'Nova lista') => {
+export const createList = async (name: string) => {
   const user_id = await requireUserId()
   const { data, error } = await supabase.from('lists').insert({ user_id, name }).select(listColumns).single()
   throwIfError(error)
