@@ -5,6 +5,7 @@ import {
   updateListSchema,
   createItemSchema,
   updateItemSchema,
+  uuidSchema,
 } from '../../../api/schemas'
 
 describe('Serverless API Input Validation Schemas', () => {
@@ -80,6 +81,18 @@ describe('Serverless API Input Validation Schemas', () => {
 
       const invalid = updateItemSchema.safeParse({ price: -1 })
       expect(invalid.success).toBe(false)
+    })
+  })
+
+  describe('uuidSchema', () => {
+    it('accepts valid RFC-4122 UUIDs', () => {
+      expect(uuidSchema.safeParse('123e4567-e89b-12d3-a456-426614174000').success).toBe(true)
+    })
+
+    it('rejects malformed or injected identifiers', () => {
+      expect(uuidSchema.safeParse('not-a-uuid').success).toBe(false)
+      expect(uuidSchema.safeParse('../admin').success).toBe(false)
+      expect(uuidSchema.safeParse('').success).toBe(false)
     })
   })
 })

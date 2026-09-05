@@ -9,6 +9,7 @@ import {
   updateListSchema,
   createItemSchema,
   updateItemSchema,
+  uuidSchema,
 } from './schemas'
 
 export {
@@ -16,6 +17,7 @@ export {
   updateListSchema,
   createItemSchema,
   updateItemSchema,
+  uuidSchema,
 }
 
 type Env = {
@@ -25,6 +27,23 @@ type Env = {
 }
 
 const app = new Hono<Env>().basePath('/api')
+
+// Safe query param parsers against NaN/DoS attacks
+const parseSafePage = (raw: string | undefined): number => {
+  const num = parseInt(raw || '1', 10)
+  return Number.isFinite(num) && num > 0 ? num : 1
+}
+
+const parseSafeLimit = (raw: string | undefined): number => {
+  const num = parseInt(raw || '20', 10)
+  return Number.isFinite(num) && num > 0 ? Math.min(100, num) : 20
+}
+
+// Global error handler: never leak internal stack traces or connection strings to client
+app.onError((err, c) => {
+  console.error('[API Error]:', err.message)
+  return c.json({ error: 'Erro interno no servidor' }, 500)
+})
 
 // Restrictive CORS middleware
 app.use(
@@ -61,6 +80,10 @@ app.use('*', async (c, next) => {
   }
 
   const token = authHeader.replace('Bearer ', '').trim()
+  if (!token) {
+    return c.json({ error: 'Não autorizado: token ausente' }, 401)
+  }
+
   const { data, error } = await supabase.auth.getUser(token)
   if (error || !data.user) {
     return c.json({ error: 'Não autorizado: token inválido' }, 401)
@@ -72,12 +95,12 @@ app.use('*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true, timestamp: new Date().toISOString() }))
 
-// GET /api/lists with pagination (default 20 per page)
+// GET /api/lists with safe pagination (default 20 per page)
 app.get('/lists', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const archived = c.req.query('archived') === 'true'
-  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10))
-  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20', 10)))
+  const page = parseSafePage(c.req.query('page'))
+  const limit = parseSafeLimit(c.req.query('limit'))
   const skip = (page - 1) * limit
 
   const [lists, total] = await Promise.all([
@@ -111,7 +134,7 @@ app.get('/lists', async (c) => {
 
 // POST /api/lists
 app.post('/lists', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const rawBody = await c.req.json().catch(() => ({}))
   const parse = createListSchema.safeParse(rawBody)
   if (!parse.success) {
@@ -127,10 +150,15 @@ app.post('/lists', async (c) => {
   return c.json({ data: list }, 201)
 })
 
-// GET /api/lists/:id
+// GET /api/lists/:id - Protected with UUID check and ownership check
 app.get('/lists/:id', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const id = c.req.param('id')
+
+  if (!uuidSchema.safeParse(id).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
+
   const list = await prisma.list.findFirst({
     where: { id, user_id: userId },
     include: { items: true },
@@ -144,8 +172,13 @@ app.get('/lists/:id', async (c) => {
 
 // PATCH /api/lists/:id (rename, archive, reopen)
 app.patch('/lists/:id', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const id = c.req.param('id')
+
+  if (!uuidSchema.safeParse(id).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
+
   const rawBody = await c.req.json().catch(() => ({}))
   const parse = updateListSchema.safeParse(rawBody)
   if (!parse.success) {
@@ -173,7 +206,7 @@ app.patch('/lists/:id', async (c) => {
 
 // POST /api/lists/clone-latest
 app.post('/lists/clone-latest', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const latest = await prisma.list.findFirst({
     where: {
       user_id: userId,
@@ -207,10 +240,14 @@ app.post('/lists/clone-latest', async (c) => {
   return c.json({ data: copy }, 201)
 })
 
-// GET /api/lists/:id/items with pagination (20 per page) - Protected against BOLA/IDOR
+// GET /api/lists/:id/items with safe pagination (20 per page) - Protected against BOLA/IDOR
 app.get('/lists/:id/items', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const listId = c.req.param('id')
+
+  if (!uuidSchema.safeParse(listId).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
 
   // Security check: verify list ownership before exposing items
   const list = await prisma.list.findFirst({
@@ -220,8 +257,8 @@ app.get('/lists/:id/items', async (c) => {
     return c.json({ error: 'Lista não encontrada' }, 404)
   }
 
-  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10))
-  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20', 10)))
+  const page = parseSafePage(c.req.query('page'))
+  const limit = parseSafeLimit(c.req.query('limit'))
   const skip = (page - 1) * limit
 
   const [items, total] = await Promise.all([
@@ -248,8 +285,12 @@ app.get('/lists/:id/items', async (c) => {
 
 // POST /api/lists/:id/items - Protected against BOLA/IDOR with schema bounds
 app.post('/lists/:id/items', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const listId = c.req.param('id')
+
+  if (!uuidSchema.safeParse(listId).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
 
   // Security check: verify list ownership before adding items
   const list = await prisma.list.findFirst({
@@ -279,8 +320,12 @@ app.post('/lists/:id/items', async (c) => {
 
 // PATCH /api/items/:id - Protected against BOLA/IDOR with schema bounds
 app.patch('/items/:id', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const id = c.req.param('id')
+
+  if (!uuidSchema.safeParse(id).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
 
   // Security check: verify item belongs to a list owned by this user
   const item = await prisma.item.findFirst({
@@ -305,8 +350,12 @@ app.patch('/items/:id', async (c) => {
 
 // DELETE /api/items/:id - Protected against BOLA/IDOR
 app.delete('/items/:id', async (c) => {
-  const userId = c.get('userId') as string
+  const userId = c.get('userId')
   const id = c.req.param('id')
+
+  if (!uuidSchema.safeParse(id).success) {
+    return c.json({ error: 'Identificador inválido' }, 400)
+  }
 
   // Security check: verify item belongs to a list owned by this user
   const item = await prisma.item.findFirst({

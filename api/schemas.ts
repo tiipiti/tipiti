@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export const uuidSchema = z.string().uuid('Identificador inválido')
+
 export const createListSchema = z.object({
   name: z
     .string()
